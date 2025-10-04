@@ -1,190 +1,52 @@
-/**
- * Streaming Controller
- * Handles real-time streaming of AI agent analysis results
- */
-
-import SSE from 'express-sse';
-import agentOrchestrator from '../services/agents/agentOrchestrator.js';
-
-// Create SSE instance for streaming
-const analysisStream = new SSE();
-
-// Track ongoing analyses
-const ongoingAnalyses = new Map();
+const fetch = require('node-fetch');
 
 /**
- * Controller functions for streaming API endpoints
+ * Handle chat completions through OpenRouter API
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
  */
-const streamingController = {
-  /**
-   * Initialize streaming connection
-   */
-  initStream: (req, res, next) => {
-    const { analysisId } = req.params;
+const getChatCompletion = async (req, res) => {
+  try {
+    const { messages } = req.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Invalid messages format' });
+    }
+
+    const url = "https://openrouter.ai/api/v1/chat/completions";
+    const headers = {
+      "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json"
+    };
     
-    // Setup SSE connection
-    analysisStream.init(req, res);
-    
-    // Send initial connection message
-    analysisStream.send({
-      event: 'connection',
-      data: {
-        message: 'Stream connection established',
-        analysisId
-      }
+    const payload = {
+      "model": "anthropic/claude-3-haiku", // You can change the model as needed
+      "messages": messages
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload)
     });
-  },
-  
-  /**
-   * Start streaming analysis
-   */
-  startAnalysis: async (req, res) => {
-    const ideaData = req.body;
-    
-    try {
-      // Generate unique ID for this analysis
-      const analysisId = Date.now().toString();
-      
-      // Store initial state in ongoing analyses
-      ongoingAnalyses.set(analysisId, {
-        status: 'pending',
-        idea: ideaData,
-        results: {},
-        createdAt: new Date().toISOString()
-      });
-      
-      // Send initial response with analysis ID
-      res.status(200).json({
-        analysisId,
-        status: 'pending',
-        message: 'Analysis started'
-      });
-      
-      // Set up streaming callbacks
-      const streamCallbacks = {
-        onTaskStart: (taskName) => {
-          analysisStream.send({
-            event: 'taskStart',
-            data: {
-              analysisId,
-              taskName,
-              timestamp: new Date().toISOString()
-            }
-          });
-        },
-        
-        onTokenStream: (taskName, token) => {
-          analysisStream.send({
-            event: 'token',
-            data: {
-              analysisId,
-              taskName,
-              token,
-              timestamp: new Date().toISOString()
-            }
-          });
-        },
-        
-        onTaskComplete: (taskName, result) => {
-          // Update ongoing analysis with this result
-          const analysis = ongoingAnalyses.get(analysisId);
-          if (analysis) {
-            analysis.results[taskName] = result;
-            ongoingAnalyses.set(analysisId, analysis);
-          }
-          
-          analysisStream.send({
-            event: 'taskComplete',
-            data: {
-              analysisId,
-              taskName,
-              result,
-              timestamp: new Date().toISOString()
-            }
-          });
-        },
-        
-        onTaskError: (taskName, errorMessage) => {
-          analysisStream.send({
-            event: 'taskError',
-            data: {
-              analysisId,
-              taskName,
-              error: errorMessage,
-              timestamp: new Date().toISOString()
-            }
-          });
-        }
-      };
-      
-      // Start the analysis with agent orchestrator (non-blocking)
-      agentOrchestrator.analyzeIdea(ideaData, streamCallbacks)
-        .then((finalResults) => {
-          // Update stored analysis with completed status and results
-          ongoingAnalyses.set(analysisId, {
-            ...ongoingAnalyses.get(analysisId),
-            status: 'completed',
-            results: finalResults.results,
-            completedAt: new Date().toISOString()
-          });
-          
-          // Send completion event
-          analysisStream.send({
-            event: 'analysisComplete',
-            data: {
-              analysisId,
-              results: finalResults.results,
-              timestamp: new Date().toISOString()
-            }
-          });
-        })
-        .catch((error) => {
-          console.error('Analysis error:', error);
-          
-          // Update stored analysis with error status
-          ongoingAnalyses.set(analysisId, {
-            ...ongoingAnalyses.get(analysisId),
-            status: 'error',
-            error: error.message,
-            completedAt: new Date().toISOString()
-          });
-          
-          // Send error event
-          analysisStream.send({
-            event: 'analysisError',
-            data: {
-              analysisId,
-              error: error.message,
-              timestamp: new Date().toISOString()
-            }
-          });
-        });
-      
-    } catch (error) {
-      console.error('Stream controller error:', error);
-      res.status(500).json({
-        error: 'Failed to start analysis',
-        message: error.message
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('OpenRouter API error:', response.status, errorData);
+      return res.status(response.status).json({ 
+        error: 'Error from OpenRouter API', 
+        details: errorData 
       });
     }
-  },
-  
-  /**
-   * Get analysis result
-   */
-  getAnalysis: (req, res) => {
-    const { analysisId } = req.params;
-    
-    // Check if analysis exists
-    if (ongoingAnalyses.has(analysisId)) {
-      res.status(200).json(ongoingAnalyses.get(analysisId));
-    } else {
-      res.status(404).json({
-        error: 'Analysis not found',
-        message: `No analysis found with ID: ${analysisId}`
-      });
-    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error in chatCompletion:', error);
+    res.status(500).json({ error: 'Failed to process chat completion' });
   }
 };
 
-export default streamingController;
+module.exports = {
+  getChatCompletion
+};

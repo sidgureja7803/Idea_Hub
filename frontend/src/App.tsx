@@ -10,7 +10,7 @@ import Footer from './components/layout/Footer';
 import ClerkProvider, { AuthenticatedRoute } from './components/auth/ClerkProvider';
 import { AuthProvider } from './hooks/useAuth';
 import CreditGuard from './components/user/CreditGuard';
-
+import NewLandingPage from './pages/NewLandingPage';
 function App() {
   return (
     <ClerkProvider>
@@ -20,7 +20,7 @@ function App() {
         <main className="flex-grow">
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<NewLandingPage />} />
             <Route path="/sign-in" element={<SignInPage />} />
             <Route path="/sign-up" element={<SignUpPage />} />
             

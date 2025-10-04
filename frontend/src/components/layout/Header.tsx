@@ -57,7 +57,7 @@ const Header: React.FC = () => {
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          {/* <nav className="hidden md:flex space-x-8">
             <Link
               to="/"
               className={`${
@@ -78,7 +78,7 @@ const Header: React.FC = () => {
             >
               Submit Idea
             </Link>
-          </nav>
+          </nav> */}
 
           {/* Auth Buttons or User Menu */}
           <div className="flex items-center space-x-4">
