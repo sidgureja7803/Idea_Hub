@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import streamingController from '../controllers/streamingController.js';
+
 const router = express.Router();
-const streamingController = require('../controllers/streamingController');
 
 // OpenRouter chat endpoint
 router.post('/chat', streamingController.getChatCompletion);
 
-module.exports = router;
+export default router;

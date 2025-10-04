@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 /**
  * Handle chat completions through OpenRouter API
@@ -47,6 +47,6 @@ const getChatCompletion = async (req, res) => {
   }
 };
 
-module.exports = {
+export default {
   getChatCompletion
 };
