@@ -1,0 +1,148 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - foundriq-network
+    restart: unless-stopped
+
+  # Backend API service
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      - PORT=8000
+      - MONGODB_URI=mongodb://mongo:27017/foundriq
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - CEREBRAS_API_URL=${CEREBRAS_API_URL:-}
+      - CEREBRAS_API_KEY=${CEREBRAS_API_KEY:-}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+    networks:
+      - foundriq-network
+    restart: unless-stopped
+
+  # Worker service
+  worker:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/foundriq
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - CEREBRAS_API_URL=${CEREBRAS_API_URL:-}
+      - CEREBRAS_API_KEY=${CEREBRAS_API_KEY:-}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - NODE_ENV=production
+    networks:
+      - foundriq-network
+    restart: unless-stopped
+
+  # MongoDB service
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - foundriq-network
+    restart: unless-stopped
+
+  # Redis service for job queue
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - foundriq-network
+    restart: unless-stopped
+
+  # Vector database (Chroma)
+  vectordb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma-data:/chroma
+    networks:
+      - foundriq-network
+    restart: unless-stopped
+
+  # API Gateway (Traefik)
+  gateway:
+    image: traefik:v2.10
+    container_name: foundriq-gateway
+    ports:
+      - "80:80" # HTTP
+      - "8080:8080" # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+    networks:
+      - foundriq-network
+    restart: unless-stopped
+
+  # Demo service - automatically submits a sample idea
+  demo-submitter:
+    build:
+      context: ./demo
+      dockerfile: Dockerfile
+    profiles:
+      - demo
+    depends_on:
+      - frontend
+      - backend
+      - worker
+    networks:
+      - foundriq-network
+    restart: on-failure
+
+networks:
+  foundriq-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  redis-data:
+  chroma-data:
