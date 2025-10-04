@@ -1,0 +1,12 @@
+<svg width="150" height="50" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M128 26L208 73V167L128 214L48 167V73L128 26Z" fill="#10A37F"/>
+  <path d="M128 26V84L208 131V73L128 26Z" fill="#0A8364"/>
+  <path d="M48 73V131L128 84V26L48 73Z" fill="#0A8364"/>
+  <path d="M48 131L128 178V84L48 131Z" fill="#0A8364"/>
+  <path d="M208 131L128 178V84L208 131Z" fill="#0D6D54"/>
+  <path d="M128 178L208 131V167L128 214V178Z" fill="#0D6D54"/>
+  <path d="M128 178V214L48 167V131L128 178Z" fill="#0D6D54"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M121.5 92.5V118.5L98.5 131.5L76 119V94.5L98.5 81.5L121.5 92.5Z" fill="white"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M182 94.5V119L159 131.5L136.5 118.5V92.5L159 81.5L182 94.5Z" fill="white"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M151.5 138V163L129 176L106 163V138L129 125L151.5 138Z" fill="white"/>
+</svg>
