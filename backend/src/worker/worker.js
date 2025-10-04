@@ -17,6 +17,7 @@ import { QUEUE_NAMES } from '../queue/queueConfig.js';
 
 // Import models
 import Job from '../models/Job.js';
+import { updateSearchStatus } from '../middleware/searchTracking.js';
 
 // Import Cerebras client
 import cerebrasClient from './cerebras_client.js';
@@ -221,6 +222,11 @@ const worker = new Worker(QUEUE_NAMES.IDEA_ANALYSIS, async job => {
     jobRecord.status = 'completed';
     await jobRecord.save();
     
+    // Update search status in user history
+    if (job.data.ideaId) {
+      await updateSearchStatus(job.data.ideaId, 'completed', jobRecord.results);
+    }
+    
     // Update progress to 100%
     await job.updateProgress(100);
     await updateJobProgress(jobRecord, 100, 'Analysis completed');
@@ -241,6 +247,11 @@ const worker = new Worker(QUEUE_NAMES.IDEA_ANALYSIS, async job => {
     };
     jobRecord.metrics.endTime = new Date();
     await jobRecord.save();
+    
+    // Update search status in user history
+    if (job.data.ideaId) {
+      await updateSearchStatus(job.data.ideaId, 'failed', { error: error.message });
+    }
     
     throw error;
   }

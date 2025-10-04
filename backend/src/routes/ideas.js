@@ -3,13 +3,15 @@ import { v4 as uuidv4 } from 'uuid';
 import Idea from '../models/Idea.js';
 import { processIdeaAnalysis } from '../services/analysisService.js';
 import { enqueueIdeaAnalysis } from '../queue/queueConfig.js';
+import { requireAuth } from '../middleware/auth.js';
+import { checkSearchLimits, trackSearchSubmission } from '../middleware/searchTracking.js';
 
 const router = express.Router();
 
-// Submit new idea for analysis
-router.post('/analyze-idea', async (req, res) => {
+// Submit new idea for analysis (requires authentication and checks search limits)
+router.post('/analyze-idea', requireAuth, checkSearchLimits, async (req, res) => {
   try {
-    const { description, category, targetAudience, problemSolved } = req.body;
+    const { description, category, targetAudience, problemSolved, title } = req.body;
 
     // Validate required fields
     if (!description || !category || !problemSolved) {
@@ -42,6 +44,15 @@ router.post('/analyze-idea', async (req, res) => {
     
     const job = await enqueueIdeaAnalysis(ideaData);
 
+    // Prepare data for tracking
+    req.trackedSearch = {
+      ideaId,
+      jobId: job.id,
+      title: title || `${category} Business Idea`,
+      description,
+      category
+    };
+
     // For backward compatibility, also call the existing analysis service
     // This can be removed once migration to the queue is complete
     if (process.env.LEGACY_PROCESSING === 'true') {
@@ -58,12 +69,27 @@ router.post('/analyze-idea', async (req, res) => {
     res.status(201).json({
       message: 'Idea submitted successfully',
       jobId: job.id,
-      analysisId: ideaId
+      analysisId: ideaId,
+      userStats: req.userStats
     });
   } catch (error) {
     console.error('Error submitting idea:', error);
     res.status(500).json({
       message: 'Failed to submit idea',
+      error: error.message
+    });
+  }
+}, trackSearchSubmission);
+
+// Get user's own ideas (search history)
+router.get('/my-ideas', requireAuth, async (req, res) => {
+  try {
+    // This will be handled by the user routes, but we can add a direct endpoint here too
+    res.redirect('/api/user/history');
+  } catch (error) {
+    console.error('Error fetching user ideas:', error);
+    res.status(500).json({
+      message: 'Failed to fetch user ideas',
       error: error.message
     });
   }

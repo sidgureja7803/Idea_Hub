@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { useUser, useClerk } from '@clerk/clerk-react';
+import { useApi } from '../utils/api';
 
 // Define user type (this extends Clerk's user data)
 interface User {
@@ -8,16 +9,33 @@ interface User {
   lastName?: string;
   email: string;
   imageUrl?: string;
-  credits?: number; // Number of credits available for analysis
+  tier: 'free' | 'premium' | 'enterprise';
+  preferences: {
+    notifications: boolean;
+    theme: 'light' | 'dark' | 'auto';
+  };
+}
+
+// Define user stats type
+interface UserStats {
+  tier: string;
+  searchesUsed: number;
+  maxSearches: number;
+  remainingSearches: number;
+  periodEnd: string;
+  canSearch: boolean;
 }
 
 // Create auth context types
 interface AuthContextType {
   user: User | null;
+  userStats: UserStats | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: () => void; // Not needed with Clerk, but kept for interface compatibility
   logout: () => void;
+  syncUser: () => Promise<void>;
+  refreshStats: () => Promise<void>;
 }
 
 // Create the context
@@ -31,23 +49,59 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { user: clerkUser, isLoaded: clerkIsLoaded } = useUser();
   const { signOut } = useClerk();
+  const api = useApi();
   const [localUser, setLocalUser] = useState<User | null>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
 
-  // Convert Clerk user to our User type when it changes
-  useEffect(() => {
-    if (clerkUser && clerkIsLoaded) {
-      // Get credits from user metadata or fetch from API in a real implementation
-      // For now, providing a default value
+  // Sync user with backend when Clerk user changes
+  const syncUser = async () => {
+    if (!clerkUser || !clerkIsLoaded) return;
+    
+    try {
+      const response = await api.post('/user/sync');
+      if (response.success) {
+        setLocalUser(response.user);
+        setUserStats(response.stats);
+      }
+    } catch (error) {
+      console.error('Error syncing user:', error);
+      // Fallback to basic user data
       setLocalUser({
         id: clerkUser.id,
         firstName: clerkUser.firstName || undefined,
         lastName: clerkUser.lastName || undefined,
         email: clerkUser.primaryEmailAddress?.emailAddress || '',
         imageUrl: clerkUser.imageUrl || undefined,
-        credits: 5 // Default credits - in a real app, this would come from a database
+        tier: 'free',
+        preferences: {
+          notifications: true,
+          theme: 'auto'
+        }
       });
+    }
+  };
+
+  // Refresh user stats
+  const refreshStats = async () => {
+    if (!localUser) return;
+    
+    try {
+      const response = await api.get('/user/stats');
+      if (response.success) {
+        setUserStats(response.stats);
+      }
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
+    }
+  };
+
+  // Convert Clerk user to our User type when it changes
+  useEffect(() => {
+    if (clerkUser && clerkIsLoaded) {
+      syncUser();
     } else if (clerkIsLoaded) {
       setLocalUser(null);
+      setUserStats(null);
     }
   }, [clerkUser, clerkIsLoaded]);
 
@@ -65,11 +119,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Context value wrapped in useMemo to prevent unnecessary re-renders
   const value = useMemo(() => ({
     user: localUser,
+    userStats: userStats,
     isAuthenticated: !!localUser,
     isLoading: !clerkIsLoaded,
     login,
-    logout
-  }), [localUser, clerkIsLoaded]);
+    logout,
+    syncUser,
+    refreshStats
+  }), [localUser, userStats, clerkIsLoaded]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

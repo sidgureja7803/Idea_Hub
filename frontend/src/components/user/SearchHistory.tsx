@@ -1,192 +1,260 @@
 /**
- * Search History Component
- * Displays user's last 5 startup idea searches
+ * SearchHistory Component
+ * Displays user's search history and current usage statistics
  */
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Clock, FileText, ChevronRight, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-// We'll use a placeholder function instead of date-fns until we can install it
-const formatDistanceToNow = (date: Date, options?: { addSuffix: boolean }) => {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
-
-  let result = '';
-  if (diffDay > 0) {
-    result = `${diffDay} day${diffDay > 1 ? 's' : ''}`;
-  } else if (diffHr > 0) {
-    result = `${diffHr} hour${diffHr > 1 ? 's' : ''}`;
-  } else if (diffMin > 0) {
-    result = `${diffMin} minute${diffMin > 1 ? 's' : ''}`;
-  } else {
-    result = `${diffSec} second${diffSec > 1 ? 's' : ''}`;
-  }
-
-  return options?.addSuffix ? `${result} ago` : result;
-};
-
-import { SearchHistory as SearchHistoryType } from '../../models/UserCredits';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { getSearchHistory } from '../../services/CreditService';
+import { useApi } from '../../utils/api';
 
-// Default search history for demo purposes when no user is logged in or no history exists
-const DEFAULT_SEARCH_HISTORY: SearchHistoryType[] = [
-  {
-    id: 'search1',
-    userId: 'demo',
-    ideaName: 'AI-Powered Meal Planning App',
-    description: 'App that creates personalized meal plans based on dietary preferences and available ingredients',
-    searchDate: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    credits: 1,
-    status: 'completed',
-    resultId: 'result1'
-  },
-  {
-    id: 'search2',
-    userId: 'demo',
-    ideaName: 'Smart Home Energy Management',
-    description: 'System that optimizes home energy usage by learning user patterns and adjusting systems automatically',
-    searchDate: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    credits: 1,
-    status: 'completed',
-    resultId: 'result2'
-  }
-];
-
-interface SearchHistoryProps {
-  maxItems?: number;
+interface SearchHistoryItem {
+  ideaId: string;
+  jobId: string;
+  title: string;
+  description: string;
+  category: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  results?: any;
+  createdAt: string;
+  completedAt?: string;
 }
 
-const SearchHistory: React.FC<SearchHistoryProps> = ({ maxItems = 5 }) => {
-  const { user } = useAuth();
-  const [searchHistory, setSearchHistory] = React.useState<SearchHistoryType[]>([]);
+interface SearchHistoryProps {
+  limit?: number;
+  showStats?: boolean;
+}
 
-  // Fetch search history using CreditService
-  React.useEffect(() => {
-    const fetchSearchHistory = async () => {
-      setSearchHistory([]); // Clear previous history
-      
-      if (!user?.id) {
-        // If no user is logged in, use default demo history
-        setSearchHistory(DEFAULT_SEARCH_HISTORY.slice(0, maxItems));
-        return;
+const SearchHistory: React.FC<SearchHistoryProps> = ({ 
+  limit = 10, 
+  showStats = true 
+}) => {
+  const { user, userStats, isAuthenticated } = useAuth();
+  const api = useApi();
+  const [searches, setSearches] = useState<SearchHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSearchHistory();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  const fetchSearchHistory = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/user/history?limit=${limit}`);
+      if (response.success) {
+        setSearches(response.searches);
+      } else {
+        setError('Failed to fetch search history');
       }
-      
-      try {
-        // Get user search history
-        const userHistory = getSearchHistory(user.id, maxItems);
-        
-        // If user has no history, show demo history
-        if (userHistory.length === 0) {
-          setSearchHistory(DEFAULT_SEARCH_HISTORY.slice(0, maxItems));
-        } else {
-          setSearchHistory(userHistory);
-        }
-      } catch (error) {
-        console.error('Failed to fetch search history:', error);
-        setSearchHistory(DEFAULT_SEARCH_HISTORY.slice(0, maxItems));
-      }
-    };
+    } catch (error) {
+      console.error('Error fetching search history:', error);
+      setError('Failed to load search history');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchSearchHistory();
-  }, [maxItems, user]);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'text-green-600 bg-green-100';
+      case 'processing':
+        return 'text-blue-600 bg-blue-100';
+      case 'failed':
+        return 'text-red-600 bg-red-100';
+      case 'pending':
+        return 'text-yellow-600 bg-yellow-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
 
-  if (searchHistory.length === 0) {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
+  if (!isAuthenticated) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700 text-center py-12">
-        <Clock className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-        <h3 className="text-xl font-semibold mb-2">No Search History</h3>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">
-          You haven't analyzed any startup ideas yet.
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Search History
+        </h3>
+        <p className="text-gray-500 dark:text-gray-400">
+          Please sign in to view your search history.
         </p>
-        <Link 
-          to="/submit" 
-          className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-        >
-          Analyze Your First Idea
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Link>
       </div>
     );
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'failed':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-      case 'in-progress':
-        return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
-      default:
-        return null;
-    }
-  };
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Search History
+        </h3>
+        <div className="animate-pulse space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="border rounded-lg p-4">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Search History
+        </h3>
+        <div className="text-red-600 dark:text-red-400">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-        <h3 className="text-xl font-semibold">Your Recent Searches</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          View and access your last {maxItems} idea validations
-        </p>
-      </div>
-      
-      <div className="divide-y divide-gray-100 dark:divide-gray-700">
-        {searchHistory.map(search => (
-          <motion.div 
-            key={search.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="p-5 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium">{search.ideaName}</h4>
-              <div className="flex items-center gap-2">
-                {getStatusIcon(search.status)}
-                <span className="text-sm text-gray-500 capitalize">
-                  {search.status.replace('-', ' ')}
-                </span>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+      {/* Header with stats */}
+      {showStats && userStats && (
+        <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Your Search History
+            </h3>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {userStats.tier.charAt(0).toUpperCase() + userStats.tier.slice(1)} Tier
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {userStats.searchesUsed}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Searches Used
               </div>
             </div>
-            
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
-              {search.description}
-            </p>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500">
-                {formatDistanceToNow(new Date(search.searchDate), { addSuffix: true })}
-              </span>
-              
-              {search.resultId && search.status === 'completed' && (
-                <Link 
-                  to={`/results/${search.resultId}`}
-                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                >
-                  <FileText className="h-3 w-3 mr-1" />
-                  View Results
-                </Link>
-              )}
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {userStats.maxSearches === -1 ? '∞' : userStats.maxSearches}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Max Searches
+              </div>
             </div>
-          </motion.div>
-        ))}
-      </div>
-      
-      <div className="p-4 bg-gray-50 dark:bg-gray-750 text-center">
-        <Link 
-          to="/dashboard"
-          className="text-sm text-blue-600 hover:text-blue-800 flex items-center justify-center"
-        >
-          View All History
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Link>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {userStats.remainingSearches === -1 ? '∞' : userStats.remainingSearches}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Remaining
+              </div>
+            </div>
+          </div>
+          
+          {!userStats.canSearch && (
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                You've reached your search limit for this period. 
+                {userStats.tier === 'free' && (
+                  <span className="ml-1">
+                    <a href="/upgrade" className="font-medium underline">
+                      Upgrade to Premium
+                    </a> for more searches.
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Search history list */}
+      <div className="p-6">
+        {searches.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-gray-400 dark:text-gray-500 mb-2">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+              No searches yet
+            </h4>
+            <p className="text-gray-500 dark:text-gray-400">
+              Submit your first business idea to get started!
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {searches.map((search) => (
+              <div
+                key={search.ideaId}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-medium text-gray-900 dark:text-white">
+                    {search.title}
+                  </h4>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(search.status)}`}
+                  >
+                    {search.status}
+                  </span>
+                </div>
+                
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  {truncateText(search.description, 150)}
+                </p>
+                
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                    {search.category}
+                  </span>
+                  <span>
+                    {formatDate(search.createdAt)}
+                  </span>
+                </div>
+                
+                {search.status === 'completed' && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => {
+                        // Navigate to results page
+                        window.location.href = `/results/${search.ideaId}`;
+                      }}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium"
+                    >
+                      View Results →
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

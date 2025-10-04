@@ -5,6 +5,7 @@ import ResultsDashboardPage from './pages/ResultsDashboardPage';
 import ReportPage from './pages/ReportPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import UserDashboardPage from './pages/UserDashboardPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ClerkProvider, { AuthenticatedRoute } from './components/auth/ClerkProvider';
@@ -27,7 +28,7 @@ function App() {
             {/* Protected Routes */}
             <Route path="/dashboard" element={
               <AuthenticatedRoute>
-                <HomePage />
+                <UserDashboardPage />
               </AuthenticatedRoute>
             } />
             <Route path="/submit" element={
