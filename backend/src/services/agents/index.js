@@ -1,22 +1,12 @@
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import getCerebrasService from '../cerebrasService.js';
 
 export class IdeaInterpreterAgent {
   constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: 'gemini-pro',
-      maxOutputTokens: 2048
-    });
+    this.cerebrasService = getCerebrasService();
   }
 
   async process(ideaData) {
-    const prompt = `
-You are an expert startup analyst. Analyze the following startup idea and extract structured metadata:
-
-**Description:** ${ideaData.description}
-**Category:** ${ideaData.category}
-**Target Audience:** ${ideaData.targetAudience || 'Not specified'}
-**Problem Solved:** ${ideaData.problemSolved}
+    const systemPrompt = `You are an expert startup analyst. Analyze startup ideas and extract structured metadata.
 
 Extract and provide the following information in JSON format:
 - industry: The specific industry sector
@@ -26,15 +16,22 @@ Extract and provide the following information in JSON format:
 - uniqueValue: Key unique value proposition
 - businessModel: Likely business model approach
 
-Respond with valid JSON only.
-`;
+Respond with valid JSON only.`;
+
+    const userInput = `**Description:** ${ideaData.description}
+**Category:** ${ideaData.category}
+**Target Audience:** ${ideaData.targetAudience || 'Not specified'}
+**Problem Solved:** ${ideaData.problemSolved}`;
 
     try {
-      const response = await this.model.invoke(prompt);
-      const content = response.content || response;
+      const response = await this.cerebrasService.generateStructuredOutput(
+        systemPrompt,
+        userInput,
+        { temperature: 0.2 }
+      );
       
       // Parse JSON response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
       }
@@ -64,22 +61,11 @@ Respond with valid JSON only.
 
 export class MarketResearchAgent {
   constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: 'gemini-pro',
-      maxOutputTokens: 2048
-    });
+    this.cerebrasService = getCerebrasService();
   }
 
   async process(interpretedData) {
-    // For demo purposes, we'll simulate Tavily search with Gemini analysis
-    const prompt = `
-You are a market research analyst. Provide a comprehensive market analysis for a startup in the ${interpretedData.industry} industry.
-
-**Industry:** ${interpretedData.industry}
-**Product Type:** ${interpretedData.productType}
-**Target Market:** ${interpretedData.targetMarket}
-**Key Problem:** ${interpretedData.keyProblem}
+    const systemPrompt = `You are a market research analyst. Provide a comprehensive market analysis for startups.
 
 Provide analysis on:
 1. Current market trends (2024-2025)
@@ -88,18 +74,25 @@ Provide analysis on:
 4. Key market drivers and challenges
 5. Market size estimates
 
-Format your response as detailed analysis with specific insights and data points where possible.
-`;
+Format your response as detailed analysis with specific insights and data points where possible.`;
+
+    const userInput = `**Industry:** ${interpretedData.industry}
+**Product Type:** ${interpretedData.productType}
+**Target Market:** ${interpretedData.targetMarket}
+**Key Problem:** ${interpretedData.keyProblem}`;
 
     try {
-      const response = await this.model.invoke(prompt);
-      const content = response.content || response;
+      const response = await this.cerebrasService.generateStructuredOutput(
+        systemPrompt,
+        userInput,
+        { temperature: 0.3 }
+      );
       
       return {
-        trends: this.extractSection(content, 'trends') || 'Growing market with increasing demand',
-        investment: this.extractSection(content, 'investment') || 'Active investment landscape',
-        size: this.extractSection(content, 'size') || 'Large addressable market',
-        summary: content
+        trends: this.extractSection(response, 'trends') || 'Growing market with increasing demand',
+        investment: this.extractSection(response, 'investment') || 'Active investment landscape',
+        size: this.extractSection(response, 'size') || 'Large addressable market',
+        summary: response
       };
     } catch (error) {
       console.error('MarketResearchAgent error:', error);
@@ -125,22 +118,11 @@ Format your response as detailed analysis with specific insights and data points
 
 export class TAMSamAgent {
   constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: 'gemini-pro',
-      maxOutputTokens: 2048
-    });
+    this.cerebrasService = getCerebrasService();
   }
 
   async process(data) {
-    const prompt = `
-You are a market sizing expert. Calculate TAM, SAM, and SOM for this startup idea:
-
-**Industry:** ${data.industry}
-**Product Type:** ${data.productType}
-**Target Market:** ${data.targetMarket}
-**Key Problem:** ${data.keyProblem}
-**Market Context:** ${data.marketData?.summary || 'Limited market data available'}
+    const systemPrompt = `You are a market sizing expert. Calculate TAM, SAM, and SOM for startup ideas.
 
 Provide:
 1. TAM (Total Addressable Market) - estimate in USD
@@ -149,18 +131,26 @@ Provide:
 4. Methodology and assumptions used
 5. Market penetration timeline
 
-Format as detailed analysis with specific dollar amounts and reasoning.
-`;
+Format as detailed analysis with specific dollar amounts and reasoning.`;
+
+    const userInput = `**Industry:** ${data.industry}
+**Product Type:** ${data.productType}
+**Target Market:** ${data.targetMarket}
+**Key Problem:** ${data.keyProblem}
+**Market Context:** ${data.marketData?.summary || 'Limited market data available'}`;
 
     try {
-      const response = await this.model.invoke(prompt);
-      const content = response.content || response;
+      const response = await this.cerebrasService.generateStructuredOutput(
+        systemPrompt,
+        userInput,
+        { temperature: 0.3 }
+      );
       
       return {
-        tam: this.extractValue(content, 'TAM') || '$10.5B',
-        sam: this.extractValue(content, 'SAM') || '$1.2B',
-        som: this.extractValue(content, 'SOM') || '$150M',
-        analysis: content
+        tam: this.extractValue(response, 'TAM') || '$10.5B',
+        sam: this.extractValue(response, 'SAM') || '$1.2B',
+        som: this.extractValue(response, 'SOM') || '$150M',
+        analysis: response
       };
     } catch (error) {
       console.error('TAMSamAgent error:', error);
@@ -182,22 +172,11 @@ Format as detailed analysis with specific dollar amounts and reasoning.
 
 export class QlooTasteAgent {
   constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: 'gemini-pro',
-      maxOutputTokens: 2048
-    });
+    this.cerebrasService = getCerebrasService();
   }
 
   async process(interpretedData) {
-    // Simulate Qloo API integration for cultural alignment
-    const prompt = `
-Analyze the cultural alignment and consumer appeal for this startup idea:
-
-**Industry:** ${interpretedData.industry}
-**Product Type:** ${interpretedData.productType}
-**Target Market:** ${interpretedData.targetMarket}
-**Key Problem:** ${interpretedData.keyProblem}
+    const systemPrompt = `Analyze the cultural alignment and consumer appeal for startup ideas.
 
 Provide analysis on:
 1. Cultural fit score (0-100)
@@ -206,17 +185,24 @@ Provide analysis on:
 4. Target demographic preferences
 5. Cultural barriers or opportunities
 
-Respond with insights about how well this idea aligns with current consumer interests and cultural trends.
-`;
+Respond with insights about how well ideas align with current consumer interests and cultural trends.`;
+
+    const userInput = `**Industry:** ${interpretedData.industry}
+**Product Type:** ${interpretedData.productType}
+**Target Market:** ${interpretedData.targetMarket}
+**Key Problem:** ${interpretedData.keyProblem}`;
 
     try {
-      const response = await this.model.invoke(prompt);
-      const content = response.content || response;
+      const response = await this.cerebrasService.generateStructuredOutput(
+        systemPrompt,
+        userInput,
+        { temperature: 0.4 }
+      );
       
       return {
-        culturalFitScore: this.extractScore(content) || 75,
-        alignment: this.extractAlignment(content) || 'Moderate alignment with current trends',
-        insights: content
+        culturalFitScore: this.extractScore(response) || 75,
+        alignment: this.extractAlignment(response) || 'Moderate alignment with current trends',
+        insights: response
       };
     } catch (error) {
       console.error('QlooTasteAgent error:', error);
@@ -245,21 +231,11 @@ Respond with insights about how well this idea aligns with current consumer inte
 
 export class CompetitionScanAgent {
   constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: 'gemini-pro',
-      maxOutputTokens: 2048
-    });
+    this.cerebrasService = getCerebrasService();
   }
 
   async process(interpretedData) {
-    const prompt = `
-Conduct a competitive analysis for this startup idea:
-
-**Industry:** ${interpretedData.industry}
-**Product Type:** ${interpretedData.productType}
-**Target Market:** ${interpretedData.targetMarket}
-**Key Problem:** ${interpretedData.keyProblem}
+    const systemPrompt = `Conduct a competitive analysis for startup ideas.
 
 Identify and analyze:
 1. Top 3-5 direct competitors
@@ -275,16 +251,23 @@ For each competitor, provide:
 - Key strengths (3-5 points)
 - Key weaknesses (3-5 points)
 
-Format as structured analysis with clear competitor profiles.
-`;
+Format as structured analysis with clear competitor profiles.`;
+
+    const userInput = `**Industry:** ${interpretedData.industry}
+**Product Type:** ${interpretedData.productType}
+**Target Market:** ${interpretedData.targetMarket}
+**Key Problem:** ${interpretedData.keyProblem}`;
 
     try {
-      const response = await this.model.invoke(prompt);
-      const content = response.content || response;
+      const response = await this.cerebrasService.generateStructuredOutput(
+        systemPrompt,
+        userInput,
+        { temperature: 0.3 }
+      );
       
       return {
-        competitors: this.parseCompetitors(content),
-        summary: content
+        competitors: this.parseCompetitors(response),
+        summary: response
       };
     } catch (error) {
       console.error('CompetitionScanAgent error:', error);

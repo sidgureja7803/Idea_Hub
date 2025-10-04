@@ -1,10 +1,5 @@
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { createRetryingLLM, isNetworkError } from '../utils/apiHelper.js';
-import { RunnableSequence } from '@langchain/core/runnables';
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import getCerebrasService from '../services/cerebrasService.js';
 import { z } from 'zod';
-import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { BaseAgent } from './baseAgent.js';
 import { AGENT_IDS } from './schema/agentSchema.js';
 
@@ -27,80 +22,19 @@ export class IdeaNormalizerAgent extends BaseAgent {
   constructor() {
     super(AGENT_IDS.IDEA_NORMALIZER);
     
-    // Check for API key with better diagnostics
-    if (!process.env.GEMINI_API_KEY) {
+    // Check for Cerebras API key
+    if (!process.env.CEREBRAS_API_URL) {
       console.error('Environment variables loaded:', Object.keys(process.env).filter(key => key.includes('API') || key.includes('KEY')).join(', '));
-      console.error('GEMINI_API_KEY is missing. Please check your .env file and ensure it is being loaded correctly.');
-      throw new Error('GEMINI_API_KEY environment variable is required for IdeaNormalizerAgent');
+      console.error('CEREBRAS_API_URL is missing. Please check your .env file and ensure it is being loaded correctly.');
+      throw new Error('CEREBRAS_API_URL environment variable is required for IdeaNormalizerAgent');
     }
     
-    console.log('IdeaNormalizerAgent initialized with GEMINI_API_KEY successfully.');
+    console.log('IdeaNormalizerAgent initialized with CEREBRAS_API_URL successfully.');
     
-    // Initialize LLM with retry logic
-    try {
-      const llm = new ChatGoogleGenerativeAI({
-        apiKey: process.env.GEMINI_API_KEY,
-        modelName: 'gemini-pro',
-        temperature: 0.2,
-        maxRetries: 3, // Native retries from the library
-      });
-      
-      // Add our custom retry logic
-      this.llm = createRetryingLLM(llm, {
-        maxRetries: 3,
-        initialDelayMs: 1000,
-        maxDelayMs: 10000,
-        onRetry: (err, attempt) => {
-          console.warn(`Retry attempt ${attempt} connecting to Gemini API: ${err.message}`);
-          
-          if (isNetworkError(err)) {
-            console.warn('Network error detected. This could be due to connectivity issues or rate limiting.');
-          }
-        }
-      });
-      
-      console.log('IdeaNormalizerAgent LLM initialized successfully with retry logic.');
-    } catch (error) {
-      console.error('Failed to initialize Gemini LLM:', error.message);
-      throw new Error(`Failed to initialize Gemini LLM: ${error.message}`);
-    }
+    // Initialize Cerebras service
+    this.cerebrasService = getCerebrasService();
     
-    // Create structured output parser
-    this.outputParser = StructuredOutputParser.fromZodSchema(normalizedIdeaSchema);
-    
-    // Create prompt template
-    this.normalizePrompt = PromptTemplate.fromTemplate(`
-You are an expert at analyzing and structuring business ideas.
-
-BUSINESS IDEA:
-{idea}
-
-Your task is to normalize this idea into a structured format. 
-Extract the core concept and organize it clearly.
-
-{format_instructions}
-
-Think step-by-step:
-1. Understand the core business concept
-2. Identify the industry and target audience
-3. Extract key features and value propositions
-4. Generate relevant keywords
-5. Create a concise title and clear description
-
-IMPORTANT: Return ONLY the JSON structure with no additional text.
-    `);
-    
-    // Create chain
-    this.chain = RunnableSequence.from([
-      {
-        idea: (input) => input.idea,
-        format_instructions: () => this.outputParser.getFormatInstructions(),
-      },
-      this.normalizePrompt,
-      this.llm,
-      new StringOutputParser(),
-      this.outputParser,
-    ]);
+    console.log('IdeaNormalizerAgent Cerebras service initialized successfully.');
   }
 
   /**
@@ -118,41 +52,84 @@ IMPORTANT: Return ONLY the JSON structure with no additional text.
     this.emitEvent(taskId, 'normalizing', 'Normalizing business idea structure');
 
     try {
-      // Run the chain with additional retry wrapper
-      const result = await this.chain.invoke({
-        idea: task.idea,
-      }).catch(async (error) => {
-        // If it's a network error, provide more specific info and retry with backoff
-        if (isNetworkError(error)) {
-          console.warn(`Network error when normalizing idea: ${error.message}`);
-          this.emitEvent(taskId, 'warning', 'Network issue detected. Retrying connection to Gemini API...');
-          
-          // Wait a bit longer before retrying
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          // Try one more time with a simpler prompt
-          return this.chain.invoke({
-            idea: task.idea,
-          });
+      // Create the system prompt for idea normalization
+      const systemPrompt = `You are an expert at analyzing and structuring business ideas.
+
+Your task is to normalize business ideas into a structured format. 
+Extract the core concept and organize it clearly.
+
+Think step-by-step:
+1. Understand the core business concept
+2. Identify the industry and target audience
+3. Extract key features and value propositions
+4. Generate relevant keywords
+5. Create a concise title and clear description
+
+IMPORTANT: Return ONLY a valid JSON structure with these exact fields:
+{
+  "title": "A concise title for the business idea (5-10 words)",
+  "description": "A clear, detailed description of the business idea (1-3 sentences)",
+  "industry": "The primary industry this business operates in",
+  "targetAudience": "The primary target audience or customer segment",
+  "keyFeatures": ["3-5 key features or value propositions"],
+  "keywords": ["5-8 relevant keywords for this business idea"]
+}
+
+Do not include any additional text, explanations, or markdown formatting.`;
+
+      // Create user input with the idea
+      const userInput = `BUSINESS IDEA TO ANALYZE:\n${task.idea}`;
+
+      // Use Cerebras service to generate structured output
+      const response = await this.cerebrasService.generateStructuredOutput(
+        systemPrompt,
+        userInput,
+        { temperature: 0.2 }
+      );
+
+      // Parse the JSON response
+      let result;
+      try {
+        // Clean the response to extract JSON
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          result = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No valid JSON found in response');
         }
-        throw error; // Re-throw if not a network error
-      });
+      } catch (parseError) {
+        console.error('Error parsing Cerebras response:', parseError);
+        console.error('Raw response:', response);
+        
+        // Fallback: create a basic structure
+        result = {
+          title: 'Business Idea',
+          description: task.idea.substring(0, 200) + '...',
+          industry: 'Technology',
+          targetAudience: 'General consumers',
+          keyFeatures: ['Innovative solution', 'User-friendly', 'Scalable'],
+          keywords: ['business', 'innovation', 'technology', 'solution', 'market']
+        };
+      }
+
+      // Validate the result against our schema
+      const validatedResult = normalizedIdeaSchema.parse(result);
       
       // Emit result event
       this.emitEvent(
         taskId, 
         'normalized', 
-        `Successfully normalized business idea: ${result.title}`,
+        `Successfully normalized business idea: ${validatedResult.title}`,
         'normalized_idea'
       );
 
-      return result;
+      return validatedResult;
     } catch (error) {
       console.error('Error in IdeaNormalizerAgent:', error);
       
       // Provide more specific error messages based on error type
-      if (isNetworkError(error)) {
-        const friendlyMessage = 'Network error connecting to AI services. Please check your internet connection and try again later.';
+      if (error.message.includes('Cerebras API error')) {
+        const friendlyMessage = 'Error connecting to AI services. Please try again later.';
         this.emitEvent(taskId, 'error', friendlyMessage);
         throw new Error(friendlyMessage);
       } else if (error.message.includes('rate limit')) {

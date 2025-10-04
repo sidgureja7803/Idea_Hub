@@ -1,2 +1,13 @@
-node_modules
-.env
+# at repo root
+cat >> .gitignore <<'EOF'
+# node
+backend/node_modules
+# env files
+*.env
+# optionally: env in subfolders
+backend/.env
+# OS / editor
+.DS_Store
+.vscode/
+.env.local
+EOF
