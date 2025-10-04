@@ -6,6 +6,7 @@ import ReportPage from './pages/ReportPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import UserDashboardPage from './pages/UserDashboardPage';
+import HackathonDemoPage from './pages/HackathonDemoPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ClerkProvider, { AuthenticatedRoute } from './components/auth/ClerkProvider';
@@ -24,6 +25,7 @@ function App() {
             <Route path="/" element={<NewLandingPage />} />
             <Route path="/sign-in" element={<SignInPage />} />
             <Route path="/sign-up" element={<SignUpPage />} />
+            <Route path="/hackathon-demo" element={<HackathonDemoPage />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={

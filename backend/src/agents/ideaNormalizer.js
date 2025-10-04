@@ -23,13 +23,13 @@ export class IdeaNormalizerAgent extends BaseAgent {
     super(AGENT_IDS.IDEA_NORMALIZER);
     
     // Check for Cerebras API key
-    if (!process.env.CEREBRAS_API_URL) {
+    if (!process.env.CEREBRAS_API_KEY) {
       console.error('Environment variables loaded:', Object.keys(process.env).filter(key => key.includes('API') || key.includes('KEY')).join(', '));
-      console.error('CEREBRAS_API_URL is missing. Please check your .env file and ensure it is being loaded correctly.');
-      throw new Error('CEREBRAS_API_URL environment variable is required for IdeaNormalizerAgent');
+      console.error('CEREBRAS_API_KEY is missing. Please check your .env file and ensure it is being loaded correctly.');
+      throw new Error('CEREBRAS_API_KEY environment variable is required for IdeaNormalizerAgent');
     }
     
-    console.log('IdeaNormalizerAgent initialized with CEREBRAS_API_URL successfully.');
+    console.log('IdeaNormalizerAgent initialized with CEREBRAS_API_KEY successfully.');
     
     // Initialize Cerebras service
     this.cerebrasService = getCerebrasService();

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 class CerebrasClient {
   constructor() {
-    this.apiUrl = process.env.CEREBRAS_API_URL;
+    this.apiKey = process.env.CEREBRAS_API_KEY;
     this.apiKey = process.env.CEREBRAS_API_KEY;
     this.mockMode = !this.apiUrl || !this.apiKey;
     

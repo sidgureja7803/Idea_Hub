@@ -29,10 +29,10 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 console.log('Environment variables loaded from:', path.resolve(__dirname, '../.env'));
 
 // Check for required environment variables
-if (!process.env.GEMINI_API_KEY || !process.env.TAVILY_API_KEY) {
-  console.warn('⚠️ Warning: Missing required API keys. Set GEMINI_API_KEY and TAVILY_API_KEY in your .env file.');
+if (!process.env.CEREBRAS_API_KEY || !process.env.TAVILY_API_KEY) {
+  console.warn('⚠️ Warning: Missing required API keys. Set CEREBRAS_API_KEY and TAVILY_API_KEY in your .env file.');
 } else {
-  console.log('✅ API Keys loaded successfully. GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Found (value hidden for security)' : 'Not found');
+  console.log('✅ API Keys loaded successfully. CEREBRAS_API_KEY:', process.env.CEREBRAS_API_KEY ? 'Found (value hidden for security)' : 'Not found');
   console.log('✅ API Keys loaded successfully. TAVILY_API_KEY:', process.env.TAVILY_API_KEY ? 'Found (value hidden for security)' : 'Not found');
 }
 

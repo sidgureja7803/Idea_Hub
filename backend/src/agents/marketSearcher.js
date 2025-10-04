@@ -34,8 +34,8 @@ export class MarketSearcherAgent extends BaseAgent {
       throw new Error('TAVILY_API_KEY environment variable is required for MarketSearcherAgent');
     }
 
-    if (!process.env.CEREBRAS_API_URL) {
-      throw new Error('CEREBRAS_API_URL environment variable is required for MarketSearcherAgent');
+    if (!process.env.CEREBRAS_API_KEY) {
+      throw new Error('CEREBRAS_API_KEY environment variable is required for MarketSearcherAgent');
     }
     
     // Initialize Tavily search tool

@@ -324,11 +324,7 @@ Format as structured analysis with clear competitor profiles.`;
 
 export class FeasibilityEvaluatorAgent {
   constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: 'gemini-pro',
-      maxOutputTokens: 2048
-    });
+    this.cerebrasService = getCerebrasService();
   }
 
   async process(data) {
@@ -353,8 +349,12 @@ Provide detailed feasibility assessment with specific recommendations.
 `;
 
     try {
-      const response = await this.model.invoke(prompt);
-      const content = response.content || response;
+      const response = await this.cerebrasService.generateStructuredOutput(
+        `You are an expert startup feasibility evaluator. Assess the technical, financial, and market feasibility of startup ideas.`,
+        prompt,
+        { temperature: 0.2 }
+      );
+      const content = response;
       
       return {
         technical: {
@@ -402,11 +402,7 @@ Provide detailed feasibility assessment with specific recommendations.
 
 export class StrategyRecommenderAgent {
   constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: 'gemini-pro',
-      maxOutputTokens: 2048
-    });
+    this.cerebrasService = getCerebrasService();
   }
 
   async process(allData) {
@@ -440,8 +436,12 @@ Format as actionable strategic plan with specific recommendations.
 `;
 
     try {
-      const response = await this.model.invoke(prompt);
-      const content = response.content || response;
+      const response = await this.cerebrasService.generateStructuredOutput(
+        `You are an expert startup strategy consultant. Generate comprehensive strategic recommendations for startup ideas.`,
+        prompt,
+        { temperature: 0.3 }
+      );
+      const content = response;
       
       return {
         goToMarket: this.extractSection(content, 'go-to-market') || 'Strategic go-to-market plan needed',
@@ -469,11 +469,7 @@ Format as actionable strategic plan with specific recommendations.
 
 export class ReportGeneratorAgent {
   constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: 'gemini-pro',
-      maxOutputTokens: 2048
-    });
+    this.cerebrasService = getCerebrasService();
   }
 
   async process(allAnalysisData) {
@@ -504,8 +500,12 @@ Use proper HTML formatting with headings, paragraphs, lists, and professional st
 `;
 
     try {
-      const response = await this.model.invoke(prompt);
-      const content = response.content || response;
+      const response = await this.cerebrasService.generateStructuredOutput(
+        `You are an expert startup report generator. Create comprehensive, well-formatted HTML reports for startup idea analysis.`,
+        prompt,
+        { temperature: 0.2 }
+      );
+      const content = response;
       
       // Clean up the HTML content
       let htmlContent = content;

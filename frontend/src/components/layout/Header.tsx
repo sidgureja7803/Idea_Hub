@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
 import UserMenu from '../auth/UserMenu';
-import { Sun, Moon, Brain, Lightbulb, LogIn, UserPlus } from 'lucide-react';
+import { Sun, Moon, Brain, Lightbulb, LogIn, UserPlus, Zap } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { darkMode, toggleDarkMode } = useTheme();
@@ -82,6 +82,15 @@ const Header: React.FC = () => {
 
           {/* Auth Buttons or User Menu */}
           <div className="flex items-center space-x-4">
+            {/* Hackathon Demo Link */}
+            <Link
+              to="/hackathon-demo"
+              className="flex items-center space-x-1 py-1.5 px-3 text-sm rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <Zap size={16} className="animate-pulse" />
+              <span>Hackathon Demo</span>
+            </Link>
+            
             {/* Theme Toggle */}
             <button
               onClick={toggleDarkMode}
