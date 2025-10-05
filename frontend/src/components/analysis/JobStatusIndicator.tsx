@@ -12,7 +12,7 @@ const JobStatusIndicator: React.FC<JobStatusIndicatorProps> = ({ status, progres
   // Variants for animation
   const containerVariants = {
     initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5 } as const }
   };
 
   // Progress circle variants
@@ -23,7 +23,7 @@ const JobStatusIndicator: React.FC<JobStatusIndicatorProps> = ({ status, progres
       transition: { 
         duration: 1.2, 
         ease: "easeInOut" 
-      }
+      } as const
     }
   };
 
@@ -38,7 +38,7 @@ const JobStatusIndicator: React.FC<JobStatusIndicatorProps> = ({ status, progres
         delay: 0.2,
         type: "spring",
         stiffness: 200
-      }
+      } as const
     }
   };
 
@@ -51,7 +51,7 @@ const JobStatusIndicator: React.FC<JobStatusIndicatorProps> = ({ status, progres
       transition: { 
         duration: 0.4, 
         delay: 0.3
-      }
+      } as const
     }
   };
 
@@ -63,7 +63,7 @@ const JobStatusIndicator: React.FC<JobStatusIndicatorProps> = ({ status, progres
       transition: { 
         repeat: Infinity, 
         duration: 2
-      }
+      } as const
     }
   };
 
