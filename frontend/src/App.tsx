@@ -5,6 +5,7 @@ import ResultsDashboardPage from './pages/ResultsDashboardPage';
 import ReportPage from './pages/ReportPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import HackathonDemoPage from './pages/HackathonDemoPage';
 import Header from './components/layout/Header';
@@ -25,6 +26,7 @@ function App() {
             <Route path="/" element={<NewLandingPage />} />
             <Route path="/sign-in" element={<SignInPage />} />
             <Route path="/sign-up" element={<SignUpPage />} />
+            <Route path="/sign-up/verify-email-address" element={<VerifyEmailPage />} />
             <Route path="/hackathon-demo" element={<HackathonDemoPage />} />
             
             {/* Protected Routes */}

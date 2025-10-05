@@ -5,6 +5,7 @@
 
 import React, { ReactNode } from 'react';
 import { ClerkProvider as ClerkAuthProvider, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import { useNavigate } from 'react-router-dom';
 
 // Clerk publishable key from environment variables (using Vite's syntax)
 // For development, we're using a test key that will work for local testing
@@ -26,7 +27,25 @@ export const ClerkProvider: React.FC<ClerkProviderProps> = ({ children }) => {
   }
 
   return (
-    <ClerkAuthProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <ClerkAuthProvider 
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      navigate={(to) => {
+        // Handle navigation to email verification page
+        if (to.includes('verify-email-address')) {
+          window.location.href = '/sign-up/verify-email-address';
+          return;
+        }
+        // Handle other navigations
+        window.location.href = to;
+      }}
+      appearance={{
+        elements: {
+          formButtonPrimary: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200',
+          footerActionLink: 'text-purple-600 hover:text-purple-800 font-medium',
+          formFieldInput: 'rounded-lg border-gray-300 focus:ring-purple-500 focus:border-purple-500',
+        }
+      }}
+    >
       {children}
     </ClerkAuthProvider>
   );

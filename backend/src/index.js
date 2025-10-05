@@ -9,6 +9,7 @@ import socketManager from './utils/socketManager.js';
 
 // Import routes
 import ideaRoutes from './routes/ideas.js';
+import ideaRoutesV2 from './routes/ideaRoutes.js';
 import analysisRoutes from './routes/analysis.js';
 import reportRoutes from './routes/reports.js';
 import streamingRoutes from './routes/streamingRoutes.js';
@@ -60,6 +61,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api', ideaRoutes);
+app.use('/api/ideas', ideaRoutesV2);  // New idea routes with follow-up questions
 app.use('/api', analysisRoutes);
 app.use('/api', reportRoutes);
 app.use('/api', streamingRoutes);

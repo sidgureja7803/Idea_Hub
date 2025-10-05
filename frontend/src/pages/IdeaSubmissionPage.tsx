@@ -10,7 +10,8 @@ import {
   Loader,
   Sparkles
 } from 'lucide-react';
-import axios from 'axios';
+import FollowUpQuestions from '../components/idea/FollowUpQuestions';
+import { useApi } from '../utils/api';
 
 interface IdeaSubmission {
   description: string;
@@ -21,14 +22,17 @@ interface IdeaSubmission {
 
 const IdeaSubmissionPage: React.FC = () => {
   const navigate = useNavigate();
+  const api = useApi();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFollowUp, setShowFollowUp] = useState(false);
   const [formData, setFormData] = useState<IdeaSubmission>({
     description: '',
     category: '',
     targetAudience: '',
     problemSolved: ''
   });
+  const [followUpAnswers, setFollowUpAnswers] = useState<Record<string, string>>({});
   
   // Sample idea for quick testing
   const sampleIdea: IdeaSubmission = {
@@ -60,14 +64,44 @@ const IdeaSubmissionPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await axios.post('/api/ideas', formData);
-      const { jobId } = response.data;
-      navigate(`/results/${jobId}`);
+      // Instead of submitting directly, show follow-up questions
+      setShowFollowUp(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred while analyzing your idea. Please try again.');
+      setError('An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  // Handle completion of follow-up questions
+  const handleFollowUpComplete = async (enhancedIdea: string, answers: Record<string, string>) => {
+    setIsSubmitting(true);
+    setError(null);
+    setFollowUpAnswers(answers);
+    
+    try {
+      // Submit the enhanced idea with follow-up answers
+      const enhancedFormData = {
+        ...formData,
+        description: enhancedIdea,
+        followUpAnswers: answers
+      };
+      
+      const response = await api.post('/ideas/analyze-idea', enhancedFormData);
+      const { jobId } = response;
+      
+      navigate(`/results/${jobId}`);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'An error occurred while analyzing your idea. Please try again.');
+      setShowFollowUp(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Handle cancellation of follow-up questions
+  const handleFollowUpCancel = () => {
+    setShowFollowUp(false);
   };
   
   const handleUseSampleIdea = async () => {
@@ -99,13 +133,20 @@ const IdeaSubmissionPage: React.FC = () => {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
-        >
-          <form onSubmit={handleSubmit} className="space-y-8">
+        {showFollowUp ? (
+          <FollowUpQuestions 
+            initialIdea={formData.description}
+            onComplete={handleFollowUpComplete}
+            onCancel={handleFollowUpCancel}
+          />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+          >
+            <form onSubmit={handleSubmit} className="space-y-8">
             {/* Idea Description */}
             <div>
               <label 
@@ -263,6 +304,7 @@ const IdeaSubmissionPage: React.FC = () => {
             )}
           </form>
         </motion.div>
+        )}
 
         {/* Info Cards */}
         <motion.div
