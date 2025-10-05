@@ -3,8 +3,6 @@
 > **Validate your startup idea in minutes, not weeks.**  
 > IdeaHub transforms raw business ideas into comprehensive, data-driven market analyses with actionable insights and strategic recommendations — powered by advanced AI models running on **Cerebras** and **Llama**.
 
----
-
 ## 🧩 Overview
 
 **IdeaHub** helps aspiring founders analyze and validate their startup ideas using an AI-driven, multi-agent system that delivers real-time insights across key business dimensions:
@@ -17,11 +15,9 @@
 
 ![IdeaHub Architecture](docs/images/architecture.png)
 
----
-
 ## 🧠 Multi-Agent AI Architecture
 
-IdeaHub’s intelligence layer is powered by **five specialized AI agents**, each designed for a specific domain of business analysis.  
+IdeaHub's intelligence layer is powered by **five specialized AI agents**, each designed for a specific domain of business analysis.  
 These agents collaborate sequentially using **LangChain** and **LangGraph**, creating an autonomous analysis pipeline.
 
 | Agent | Purpose |
@@ -32,15 +28,13 @@ These agents collaborate sequentially using **LangChain** and **LangGraph**, cre
 | 🔬 **Feasibility Evaluator** | Assesses technical, operational, and financial viability |
 | 🧭 **Strategy Recommender** | Generates go-to-market and differentiation strategies |
 
-Each agent’s output is structured and composable, forming a detailed, investor-ready report.
-
----
+Each agent's output is structured and composable, forming a detailed, investor-ready report.
 
 ## 🤖 AI Model Integration
 
-### ⚡ **Cerebras Integration**
+### ⚡ Cerebras Integration
 
-IdeaHub leverages the **Cerebras Inference API** for ultra-fast, high-performance LLM inference.
+IdeaHub leverages the **Cerebras Inference API** for ultra-fast, high-performance LLM inference:
 
 - Powers market research and strategic recommendation agents  
 - Delivers structured JSON responses in **~1.5–2s** average latency  
@@ -54,72 +48,131 @@ async function runAgent(agentName, prompt) {
     maxTokens: 2048
   });
 }
-🔹 Impact: Reduced total analysis time by ~4× and enabled real-time multi-agent execution.
+```
 
-🦙 Llama Models
+🔹 **Impact**: Reduced total analysis time by ~4× and enabled real-time multi-agent execution.
+
+### 🦙 Llama Models
+
 IdeaHub integrates Llama 3 models for deep contextual reasoning and domain-specific analysis:
 
-Context-aware market trend evaluation
+- Context-aware market trend evaluation
+- Competitor differentiation and mapping
+- Financial forecasting and feasibility scoring
+- Strategic recommendation synthesis
 
-Competitor differentiation and mapping
+🔹 **Impact**: Enabled human-like reasoning, coherent insight generation, and consistent tone across all agent outputs.
 
-Financial forecasting and feasibility scoring
+## 🧰 Core Technology Stack
 
-Strategic recommendation synthesis
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend** | React 18, TypeScript, Tailwind CSS, Framer Motion |
+| **Backend** | Node.js (Express), LangChain, LangGraph |
+| **AI / ML** | Cerebras Inference API, Llama 3 models |
+| **Database** | MongoDB (Mongoose ORM) |
+| **Infrastructure** | Dockerized microservices for scalable deployment |
 
-🔹 Impact: Enabled human-like reasoning, coherent insight generation, and consistent tone across all agent outputs.
+## 💻 Environment Variables
 
-🧰 Core Technology Stack
-Layer	Technologies
-Frontend	React 18, TypeScript, Tailwind CSS, Framer Motion
-Backend	Node.js (Express), LangChain, LangGraph
-AI / ML	Cerebras Inference API, Llama 3 models
-Database	MongoDB (Mongoose ORM)
-Infrastructure	Dockerized microservices for scalable deployment
+### Frontend Variables (.env)
 
-⚙️ Key Features
-⚡ Real-Time AI Analysis: Generate business reports within minutes
+```
+VITE_API_URL=http://localhost:3001/api
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_your-key-here
+```
 
-🧭 Interactive Dashboard: 5-tab analytics view with data visualizations
+### Backend Variables (.env)
 
-📄 Report Export: Download outputs as PDF or Markdown
+```
+# Server Configuration
+PORT=8000
+NODE_ENV=development
+API_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:5173
+CORS_ORIGIN=http://localhost:5173
 
-🔁 Agent Orchestration: 7 specialized AI agents working in sequence
+# Database
+MONGODB_URI=mongodb://localhost:27017/ideahub
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
 
-🐳 Containerized Architecture: Docker-based deployment for scalability and reproducibility
+# AI Services
+CEREBRAS_API_URL=https://api.cerebras.com/v1/generate
+CEREBRAS_API_KEY=your-api-key-here
+OPENROUTER_API_KEY=your-api-key-here
 
-🔐 Secure Authentication: (Clerk integration optional for OAuth login)
+# Queue Configuration
+WORKER_CONCURRENCY=2
+ANALYSIS_TIMEOUT=180000
 
-🚀 Quick Start
-🧱 Recommended: Docker Setup
-bash
-Copy code
+# Authentication (Optional)
+CLERK_SECRET_KEY=sk_test_your-key-here
+JWT_SECRET=your-secret-key-here
+```
+
+## ⚙️ Key Features
+
+- ⚡ **Real-Time AI Analysis**: Generate business reports within minutes
+- 🧭 **Interactive Dashboard**: 5-tab analytics view with data visualizations
+- 📄 **Report Export**: Download outputs as PDF or Markdown
+- 🔁 **Agent Orchestration**: 5 specialized AI agents working in sequence
+- 🐳 **Containerized Architecture**: Docker-based deployment for scalability
+- 🔐 **Secure Authentication**: Clerk integration for OAuth login (optional)
+
+## 🚀 Quick Start
+
+### 🐳 Recommended: Docker Setup
+
+```bash
 git clone https://github.com/<your-username>/ideahub.git
 cd ideahub
 docker compose up --build
+```
+
 Then visit http://localhost:3000 and try a sample idea submission.
 
-📚 Additional Docs
-⚙️ Docker Setup
+### 🔧 Manual Setup
 
-☁️ Deployment Guide
+#### Backend Setup
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your configuration
+npm run dev
+```
 
-🏆 Hackathon Demo Instructions
+#### Frontend Setup
+```bash
+cd frontend
+npm install
+cp .env.example .env
+# Edit .env with your configuration
+npm run dev
+```
 
-🧠 Cerebras Integration Details
+## 📚 Additional Documentation
 
-🦙 OpenRouter / Llama Setup
+- [Docker Setup Guide](DOCKER.md)
+- [Deployment Guide](DEPLOYMENT.md)
+- [Hackathon Demo Instructions](HACKATHON.md)
+- [Cerebras Integration Details](CEREBRAS.md)
+- [OpenRouter / Llama Setup](OPENROUTER.md)
 
-📈 Performance Metrics
-Metric	Result
-Average Analysis Time	2–3 minutes per startup idea
-Inference Latency	1.5–2.0 seconds per agent request
-Success Rate	99.7% task completion
-Concurrent Pipelines	5–10 simultaneous analysis jobs
+## 📈 Performance Metrics
 
-🏗️ Architecture Snapshot
-scss
-Copy code
+| Metric | Result |
+|--------|--------|
+| Average Analysis Time | 2–3 minutes per startup idea |
+| Inference Latency | 1.5–2.0 seconds per agent request |
+| Success Rate | 99.7% task completion |
+| Concurrent Pipelines | 5–10 simultaneous analysis jobs |
+
+## 🏗️ Architecture Overview
+
+```
 Frontend (React + TypeScript)
         ↓
    Backend (Express + LangChain)
@@ -129,11 +182,12 @@ Frontend (React + TypeScript)
  Cerebras & Llama Inference
         ↓
        MongoDB
-❤️ Built With
-Made with passion for founders, by founders — powered by
-Cerebras, Llama 3, LangChain, Docker, and Node.js.
+```
 
-IdeaHub makes startup validation faster, smarter, and more accessible — turning every founder’s idea into actionable intelligence.
+---
 
-yaml
-Copy code
+❤️ **Built With**
+
+Made with passion for founders, by founders — powered by Cerebras, Llama 3, LangChain, Docker, and Node.js.
+
+IdeaHub makes startup validation faster, smarter, and more accessible — turning every founder's idea into actionable intelligence.
