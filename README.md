@@ -79,37 +79,29 @@ IdeaHub integrates Llama 3 models for deep contextual reasoning and domain-speci
 
 ```
 VITE_API_URL=http://localhost:3001/api
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_your-key-here
+CLERK_PUBLISHABLE_KEY=pk_test_your-key-here
 ```
 
 ### Backend Variables (.env)
 
 ```
-# Server Configuration
-PORT=8000
+# Database Configuration
+MONGODB_URI=your_mongodb_connection_string_here
+PORT=3001
 NODE_ENV=development
-API_URL=http://localhost:8000
-FRONTEND_URL=http://localhost:5173
+
+# API Keys
+TAVILY_API_KEY=your_tavily_api_key_here
+QLOO_API_KEY=your_qloo_api_key_here
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+CEREBRAS_API_KEY=your_cerebras_api_key_here
+
+# CORS Configuration
 CORS_ORIGIN=http://localhost:5173
 
-# Database
-MONGODB_URI=mongodb://localhost:27017/ideahub
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-
-# AI Services
-CEREBRAS_API_URL=https://api.cerebras.com/v1/generate
-CEREBRAS_API_KEY=your-api-key-here
-OPENROUTER_API_KEY=your-api-key-here
-
-# Queue Configuration
-WORKER_CONCURRENCY=2
-ANALYSIS_TIMEOUT=180000
-
-# Authentication (Optional)
-CLERK_SECRET_KEY=sk_test_your-key-here
-JWT_SECRET=your-secret-key-here
+# Clerk Authentication
+CLERK_SECRET_KEY=your_clerk_secret_key_here
+CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
 ```
 
 ## ⚙️ Key Features
@@ -188,6 +180,6 @@ Frontend (React + TypeScript)
 
 ❤️ **Built With**
 
-Made with passion for founders, by founders — powered by Cerebras, Llama 3, LangChain, Docker, and Node.js.
+Made with passion for founders, by Siddhant Gureja — powered by Cerebras, Llama 3, LangChain, Docker, and Node.js.
 
 IdeaHub makes startup validation faster, smarter, and more accessible — turning every founder's idea into actionable intelligence.
