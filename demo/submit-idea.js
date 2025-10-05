@@ -46,7 +46,7 @@ const submitSampleIdea = async () => {
     console.log('Sample idea submitted successfully!');
     console.log('Response:', JSON.stringify(response.data, null, 2));
     
-    console.log('Demo submission complete. You can now visit the frontend at http://localhost:3000');
+    console.log('Demo submission complete. You can now visit the frontend at http://localhost:5173');
     
     // Poll the job status (optional)
     if (response.data && response.data.jobId) {
