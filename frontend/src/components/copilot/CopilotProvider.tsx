@@ -252,7 +252,7 @@ const CopilotProvider: React.FC<CopilotProviderProps> = ({ children }) => {
       initialMessages={[
         {
           role: 'assistant',
-          content: 'Hi! I\'m your FoundrIQ assistant. I can help you with idea submission, analysis results, and more. What can I help you with?'
+          content: 'Hi! I\'m your IdeaHub assistant. I can help you with idea submission, analysis results, and more. What can I help you with?'
         }
       ]}
     >
@@ -268,7 +268,7 @@ const CopilotProvider: React.FC<CopilotProviderProps> = ({ children }) => {
       {/* Include CopilotKit UI components */}
       <CopilotSidebar 
         defaultOpen={false}
-        poweredByText="Powered by FoundrIQ"
+        poweredByText="Powered by IdeaHub"
       />
     </CopilotKit>
   );

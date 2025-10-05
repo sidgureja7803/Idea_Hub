@@ -1,6 +1,6 @@
 /**
  * Credit Service
- * Handles credit-related operations for FoundrIQ
+ * Handles credit-related operations for IdeaHub
  */
 
 import { UserCredits, CreditPackage, SearchHistory } from '../models/UserCredits';

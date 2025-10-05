@@ -22,7 +22,7 @@ const getChatCompletion = async (req, res) => {
       "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
       "Content-Type": "application/json",
       "HTTP-Referer": "http://localhost:5173", // Required by OpenRouter
-      "X-Title": "FoundrIQ Chatbot" // Optional but recommended
+      "X-Title": "IdeaHub Chatbot" // Optional but recommended
     };
     
     const payload = {

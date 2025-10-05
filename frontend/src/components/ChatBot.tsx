@@ -46,7 +46,7 @@ const predefinedQuestions: PredefinedQuestion[] = [
   },
   {
     id: 'platform',
-    question: 'How does FoundrIQ help with startup validation?',
+    question: 'How does IdeaHub help with startup validation?',
     icon: <Zap className="w-4 h-4" />,
     category: 'Platform Features'
   }
@@ -55,7 +55,7 @@ const predefinedQuestions: PredefinedQuestion[] = [
 const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: '👋 Hi! I\'m the FoundrIQ assistant, powered by OpenRouter. I can help you with startup validation, market analysis, and business strategy. Choose a question below or ask me anything!' }
+    { role: 'assistant', content: '👋 Hi! I\'m the IdeaHub assistant, powered by OpenRouter. I can help you with startup validation, market analysis, and business strategy. Choose a question below or ask me anything!' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -95,7 +95,7 @@ const ChatBot: React.FC = () => {
         },
         body: JSON.stringify({ 
           messages: [
-            { role: 'system', content: 'You are an AI assistant for FoundrIQ, an AI-powered startup validation platform. You help users analyze and validate their startup ideas using market research, competitive benchmarking, and strategy generation. Always be helpful, concise, and focus on providing valuable insights about startup validation, market analysis, and business strategy. You are powered by OpenRouter platform and can provide expert advice on entrepreneurship and business development.' },
+            { role: 'system', content: 'You are an AI assistant for IdeaHub, an AI-powered startup validation platform. You help users analyze and validate their startup ideas using market research, competitive benchmarking, and strategy generation. Always be helpful, concise, and focus on providing valuable insights about startup validation, market analysis, and business strategy. You are powered by OpenRouter platform and can provide expert advice on entrepreneurship and business development.' },
             ...messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-5),
             newUserMessage
           ]
@@ -142,7 +142,7 @@ const ChatBot: React.FC = () => {
             <div className="flex items-center">
               <MessageCircle className="h-5 w-5 mr-2" />
               <div>
-                <h3>FoundrIQ Assistant</h3>
+                <h3>IdeaHub Assistant</h3>
                 <div className="flex items-center text-xs opacity-90">
                   <Zap className="w-3 h-3 mr-1" />
                   Powered by OpenRouter

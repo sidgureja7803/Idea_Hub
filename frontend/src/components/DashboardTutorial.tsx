@@ -32,7 +32,7 @@ const DashboardTutorial: React.FC<DashboardTutorialProps> = ({ onClose, isOpen }
 
   const tutorialSteps = [
     {
-      title: "Welcome to FoundrIQ",
+      title: "Welcome to IdeaHub",
       description: "Your AI-powered startup validation platform. Let's take a quick tour of how to use our platform to validate your startup ideas.",
       icon: Brain,
       highlight: "welcome"

@@ -1,6 +1,6 @@
-# FoundrIQ Docker Setup
+# IdeaHub Docker Setup
 
-This document explains how to run FoundrIQ using Docker and Docker Compose.
+This document explains how to run IdeaHub using Docker and Docker Compose.
 
 ## Prerequisites
 
@@ -27,7 +27,7 @@ The Docker setup includes the following services:
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd FoundrIQ
+   cd IdeaHub
    ```
 
 2. Create a `.env` file in the root directory with your environment variables:
@@ -66,7 +66,7 @@ This will start all services and automatically submit a sample idea for processi
 | Variable | Description | Default |
 |----------|-------------|---------|
 | PORT | Backend server port | 8000 |
-| MONGODB_URI | MongoDB connection string | mongodb://mongo:27017/foundriq |
+| MONGODB_URI | MongoDB connection string | mongodb://mongo:27017/IdeaHub |
 | REDIS_HOST | Redis hostname | redis |
 | REDIS_PORT | Redis port | 6379 |
 | REDIS_PASSWORD | Redis password | (none) |
@@ -106,7 +106,7 @@ If services can't connect to each other, check that they're all on the same Dock
 
 ```bash
 docker network ls
-docker network inspect foundriq-network
+docker network inspect IdeaHub-network
 ```
 
 ### Missing Environment Variables

@@ -1,10 +1,10 @@
-# Cerebras Integration in FoundrIQ
+# Cerebras Integration in IdeaHub
 
-This document details how FoundrIQ integrates with the Cerebras Inference API.
+This document details how IdeaHub integrates with the Cerebras Inference API.
 
 ## Integration Architecture
 
-FoundrIQ leverages Cerebras' powerful inference capabilities through a dedicated worker process that runs specialized agents for different aspects of startup analysis. The worker communicates with the Cerebras API to perform complex reasoning and analysis tasks.
+IdeaHub leverages Cerebras' powerful inference capabilities through a dedicated worker process that runs specialized agents for different aspects of startup analysis. The worker communicates with the Cerebras API to perform complex reasoning and analysis tasks.
 
 ## Key Features
 

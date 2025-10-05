@@ -4,7 +4,7 @@ services:
   # MongoDB Database
   mongodb:
     image: mongo:7.0
-    container_name: foundriq-mongodb
+    container_name: IdeaHub-mongodb
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
@@ -16,26 +16,26 @@ services:
       - mongodb_data:/data/db
       - ./backend/mongodb-init:/docker-entrypoint-initdb.d
     networks:
-      - foundriq-network
+      - IdeaHub-network
 
   # Redis for BullMQ
   redis:
     image: redis:7-alpine
-    container_name: foundriq-redis
+    container_name: IdeaHub-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - foundriq-network
+      - IdeaHub-network
 
   # Backend API
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: foundriq-backend
+    container_name: IdeaHub-backend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -54,7 +54,7 @@ services:
       - mongodb
       - redis
     networks:
-      - foundriq-network
+      - IdeaHub-network
     volumes:
       - ./backend/uploads:/app/uploads
 
@@ -63,7 +63,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
-    container_name: foundriq-worker
+    container_name: IdeaHub-worker
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -78,14 +78,14 @@ services:
       - redis
       - backend
     networks:
-      - foundriq-network
+      - IdeaHub-network
 
   # Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: foundriq-frontend
+    container_name: IdeaHub-frontend
     restart: unless-stopped
     environment:
       VITE_API_URL: http://localhost:3001
@@ -95,12 +95,12 @@ services:
     depends_on:
       - backend
     networks:
-      - foundriq-network
+      - IdeaHub-network
 
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: foundriq-nginx
+    container_name: IdeaHub-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -112,12 +112,12 @@ services:
       - frontend
       - backend
     networks:
-      - foundriq-network
+      - IdeaHub-network
 
 volumes:
   mongodb_data:
   redis_data:
 
 networks:
-  foundriq-network:
+  IdeaHub-network:
     driver: bridge

@@ -1,7 +1,7 @@
 {
-  "name": "foundriq-demo-submitter",
+  "name": "IdeaHub-demo-submitter",
   "version": "1.0.0",
-  "description": "Automated demo submitter for FoundrIQ",
+  "description": "Automated demo submitter for IdeaHub",
   "main": "submit-idea.js",
   "scripts": {
     "start": "node submit-idea.js"

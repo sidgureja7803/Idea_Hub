@@ -1,8 +1,8 @@
-# FoundrIQ Hackathon Documentation
+# IdeaHub Hackathon Documentation
 
 ## 🚀 Overview
 
-FoundrIQ is an AI-powered startup validation platform that uses **Llama models on Cerebras infrastructure** to provide comprehensive analysis and validation of business ideas. This document outlines our technical approach for the hackathon, focusing on how we leverage Llama models via Cerebras for inference.
+IdeaHub is an AI-powered startup validation platform that uses **Llama models on Cerebras infrastructure** to provide comprehensive analysis and validation of business ideas. This document outlines our technical approach for the hackathon, focusing on how we leverage Llama models via Cerebras for inference.
 
 ## 🦙 Llama Models + ⚡ Cerebras Infrastructure
 
@@ -214,6 +214,6 @@ To see our system in action:
 
 ## 👥 Team
 
-- Team Name: FoundrIQ
+- Team Name: IdeaHub
 - Track: Llama + Cerebras
-- Contact: [team@foundriq.ai](mailto:team@foundriq.ai)
+- Contact: [team@IdeaHub.ai](mailto:team@IdeaHub.ai)

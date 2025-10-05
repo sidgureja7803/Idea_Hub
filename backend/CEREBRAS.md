@@ -1,6 +1,6 @@
-# Cerebras Integration for FoundrIQ
+# Cerebras Integration for IdeaHub
 
-This document outlines the integration of Cerebras inference API with the FoundrIQ platform, including the job queue system, worker pipeline, and metrics tracking.
+This document outlines the integration of Cerebras inference API with the IdeaHub platform, including the job queue system, worker pipeline, and metrics tracking.
 
 ## Overview
 

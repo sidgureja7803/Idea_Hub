@@ -52,7 +52,7 @@ const Header: React.FC = () => {
               <Lightbulb className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              FoundrIQ
+              IdeaHub
             </span>
           </Link>
 

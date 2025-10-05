@@ -1,4 +1,4 @@
-# FoundrIQ Deployment Guide
+# IdeaHub Deployment Guide
 
 ## 🚀 Quick Start
 

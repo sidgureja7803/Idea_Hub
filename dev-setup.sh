@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# FoundrIQ Development Setup Script
-echo "🛠️  Setting up FoundrIQ for development..."
+# IdeaHub Development Setup Script
+echo "🛠️  Setting up IdeaHub for development..."
 
 # Check if .env file exists
 if [ ! -f .env ]; then

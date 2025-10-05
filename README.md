@@ -1,17 +1,17 @@
-# FoundrIQ 🚀
+# IdeaHub 🚀
 
-> **FoundrIQ is an AI-powered startup validation platform that transforms raw business ideas into comprehensive market analyses with real-time insights and strategic recommendations in minutes, not weeks.**
+> **IdeaHub is an AI-powered startup validation platform that transforms raw business ideas into comprehensive market analyses with real-time insights and strategic recommendations in minutes, not weeks.**
 
 ## Overview
 
-FoundrIQ helps aspiring founders validate their startup ideas using AI-powered analysis:
+IdeaHub helps aspiring founders validate their startup ideas using AI-powered analysis:
 - Real-time market research
 - Competitive benchmarking
 - Market sizing (TAM/SAM/SOM)
 - Feasibility assessment
 - Strategic recommendations
 
-![FoundrIQ Architecture](docs/images/architecture.png)
+![IdeaHub Architecture](docs/images/architecture.png)
 
 ## AI Analysis Agents
 
@@ -29,7 +29,7 @@ Our platform uses specialized AI agents working in sequence to analyze business 
 
 ### Cerebras AI
 
-FoundrIQ leverages Cerebras Inference API for high-performance AI processing:
+IdeaHub leverages Cerebras Inference API for high-performance AI processing:
 
 - Powers specialized analysis agents for market research and strategy generation
 - Delivers structured JSON responses with ~1.5-2 second latency

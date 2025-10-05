@@ -515,7 +515,7 @@ const FoundrIQLandingPage = () => {
               </h2>
               
               <p className="text-xl text-blue-100 mb-12 max-w-2xl mx-auto">
-                Join thousands of founders who've transformed their concepts into successful startups with FoundrIQ
+                Join thousands of founders who've transformed their concepts into successful startups with IdeaHub
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">

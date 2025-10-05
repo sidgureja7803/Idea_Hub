@@ -19,7 +19,7 @@ const Footer: React.FC = () => {
                 <Lightbulb className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                FoundrIQ
+                IdeaHub
               </span>
             </div>
             <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
@@ -101,7 +101,7 @@ const Footer: React.FC = () => {
 
         <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
           <p className="text-center text-gray-600 dark:text-gray-400">
-            © 2025 FoundrIQ. All rights reserved. Powered by AI.
+            © 2025 IdeaHub. All rights reserved. Powered by AI.
           </p>
         </div>
       </div>

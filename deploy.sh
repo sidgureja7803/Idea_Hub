@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# FoundrIQ Deployment Script
-echo "🚀 Starting FoundrIQ Deployment..."
+# IdeaHub Deployment Script
+echo "🚀 Starting IdeaHub Deployment..."
 
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
