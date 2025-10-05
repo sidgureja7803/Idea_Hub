@@ -17,13 +17,13 @@ IdeaHub helps aspiring founders validate their startup ideas using AI-powered an
 
 Our platform uses specialized AI agents working in sequence to analyze business ideas:
 
-1. **IdeaInterpreterAgent** - Extracts structured metadata from raw ideas
-2. **MarketResearchAgent** - Performs real-time market trend analysis
-3. **TAMSamAgent** - Calculates market sizing (TAM/SAM/SOM)
-4. **CompetitionScanAgent** - Maps competitive landscape and market gaps
-5. **FeasibilityEvaluatorAgent** - Assesses technical and financial viability
-6. **StrategyRecommenderAgent** - Generates personalized go-to-market strategies
-7. **ReportGeneratorAgent** - Compiles comprehensive analysis reports
+5 Specialized AI Agents analyze each idea across critical business domains:
+Market Analysis: Market size, growth rates, customer needs, and target audience identification
+TAM & SAM Analysis: Total Addressable Market and Serviceable Addressable Market calculations
+Competitive Landscape: Market leaders, emerging players, trends, and differentiation strategies
+Feasibility Assessment: Technical, operational, and financial feasibility scoring
+Strategic Recommendations: Go-to-market strategies and competitive advantages
+
 
 ## AI Models Integration
 
