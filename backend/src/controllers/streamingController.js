@@ -14,9 +14,15 @@ const getChatCompletion = async (req, res) => {
     }
 
     const url = "https://openrouter.ai/api/v1/chat/completions";
+    
+    // Debug log for API key
+    console.log('OpenRouter API Key (first 10 chars):', process.env.OPENROUTER_API_KEY?.substring(0, 10) || 'NOT FOUND');
+    
     const headers = {
       "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "HTTP-Referer": "http://localhost:5173", // Required by OpenRouter
+      "X-Title": "FoundrIQ Chatbot" // Optional but recommended
     };
     
     const payload = {
@@ -33,9 +39,13 @@ const getChatCompletion = async (req, res) => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('OpenRouter API error:', response.status, errorData);
+      console.error('Request headers:', headers);
+      console.error('Request payload:', payload);
       return res.status(response.status).json({ 
         error: 'Error from OpenRouter API', 
-        details: errorData 
+        details: errorData,
+        status: response.status,
+        statusText: response.statusText
       });
     }
 

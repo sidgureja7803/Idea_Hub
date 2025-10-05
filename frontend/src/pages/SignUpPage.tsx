@@ -10,7 +10,6 @@ import { Brain, Lightbulb, ChevronRight } from 'lucide-react';
 
 // Import technology logos
 import clerkLogo from '../assets/images/clerk.svg';
-import geminiLogo from '../assets/images/gemini.svg';
 import langchainLogo from '../assets/images/langchain.svg';
 import tavilyLogo from '../assets/images/tavily.svg';
 import openaiLogo from '../assets/images/openai.svg';
@@ -18,7 +17,6 @@ import openaiLogo from '../assets/images/openai.svg';
 const SignUpPage: React.FC = () => {
   const techLogos = [
     { src: clerkLogo, alt: 'Clerk', delay: 0, id: 'clerk' },
-    { src: geminiLogo, alt: 'Gemini Pro', delay: 0.1, id: 'gemini' },
     { src: langchainLogo, alt: 'LangChain', delay: 0.2, id: 'langchain' },
     { src: tavilyLogo, alt: 'Tavily', delay: 0.3, id: 'tavily' },
     { src: openaiLogo, alt: 'OpenAI', delay: 0.4, id: 'openai' }

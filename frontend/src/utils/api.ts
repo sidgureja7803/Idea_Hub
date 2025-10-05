@@ -1,12 +1,5 @@
-/**
- * API utility functions for making authenticated requests to the backend
- */
-
 import axios from 'axios';
-import { useAuth } from '../hooks/useAuth';
-
-// Base API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -17,30 +10,25 @@ const apiClient = axios.create({
 });
 
 /**
+ * Get the current auth token from Clerk
+ * @returns The authentication token or null if not authenticated
+ */
+const getAuthToken = async (): Promise<string | null> => {
+  try {
+    // @ts-ignore - window.Clerk is added by Clerk's script
+    const token = await window.Clerk?.session?.getToken();
+    return token || null;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return null;
+  }
+};
+
+/**
  * Custom hook for making authenticated API requests
  * This will automatically include the auth token in requests
  */
 export const useApi = () => {
-  const { isAuthenticated } = useAuth();
-  
-  /**
-   * Get the current auth token from Clerk
-   * @returns The authentication token or null if not authenticated
-   */
-  const getAuthToken = async (): Promise<string | null> => {
-    if (!isAuthenticated) return null;
-    
-    // Get token from Clerk
-    try {
-      // @ts-ignore - window.Clerk is added by Clerk's script
-      const token = await window.Clerk?.session?.getToken();
-      return token || null;
-    } catch (error) {
-      console.error('Error getting auth token:', error);
-      return null;
-    }
-  };
-  
   /**
    * Make an authenticated API request
    * @param method HTTP method

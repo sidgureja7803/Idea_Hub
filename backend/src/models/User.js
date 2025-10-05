@@ -193,7 +193,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Create indexes for efficient queries
-userSchema.index({ userId: 1 });
+// userId is already indexed with unique: true
 userSchema.index({ email: 1 });
 userSchema.index({ 'searchHistory.createdAt': -1 });
 

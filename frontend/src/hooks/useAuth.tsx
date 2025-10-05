@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { useUser, useClerk } from '@clerk/clerk-react';
-import { useApi } from '../utils/api';
+import axios from 'axios';
+
+// Base API URL from environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Define user type (this extends Clerk's user data)
 interface User {
@@ -49,19 +52,51 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { user: clerkUser, isLoaded: clerkIsLoaded } = useUser();
   const { signOut } = useClerk();
-  const api = useApi();
   const [localUser, setLocalUser] = useState<User | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
+
+  // Get auth token helper function
+  const getAuthToken = async (): Promise<string | null> => {
+    if (!clerkUser || !clerkIsLoaded) return null;
+    
+    try {
+      // @ts-ignore - window.Clerk is added by Clerk's script
+      const token = await window.Clerk?.session?.getToken();
+      return token || null;
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return null;
+    }
+  };
+
+  // Make authenticated API request
+  const makeRequest = async (method: string, endpoint: string, data?: any) => {
+    const token = await getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return axios({
+      method,
+      url: `${API_URL}${endpoint}`,
+      data,
+      headers
+    });
+  };
 
   // Sync user with backend when Clerk user changes
   const syncUser = async () => {
     if (!clerkUser || !clerkIsLoaded) return;
     
     try {
-      const response = await api.post('/user/sync');
-      if (response.success) {
-        setLocalUser(response.user);
-        setUserStats(response.stats);
+      const response = await makeRequest('post', '/user/sync');
+      if (response.data.success) {
+        setLocalUser(response.data.user);
+        setUserStats(response.data.stats);
       }
     } catch (error) {
       console.error('Error syncing user:', error);
@@ -86,9 +121,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!localUser) return;
     
     try {
-      const response = await api.get('/user/stats');
-      if (response.success) {
-        setUserStats(response.stats);
+      const response = await makeRequest('get', '/user/stats');
+      if (response.data.success) {
+        setUserStats(response.data.stats);
       }
     } catch (error) {
       console.error('Error refreshing stats:', error);
