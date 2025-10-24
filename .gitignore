@@ -1,9 +1,0 @@
-# node
-node_modules/
-# env files
-*.env
-backend/.env
-# editor / OS
-.DS_Store
-.vscode/
-.env.local
