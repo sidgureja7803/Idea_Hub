@@ -8,6 +8,8 @@ import SignUpPage from './pages/SignUpPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import HackathonDemoPage from './pages/HackathonDemoPage';
+import IdeaRefinerPage from './pages/IdeaRefinerPage';
+import EvidenceExtractorPage from './pages/EvidenceExtractorPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ClerkProvider, { AuthenticatedRoute } from './components/auth/ClerkProvider';
@@ -18,7 +20,7 @@ function App() {
   return (
     <ClerkProvider>
       <AuthProvider>
-        <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+        <div className="min-h-screen flex flex-col bg-dark-950 text-white">
         <Header />
         <main className="flex-grow">
           <Routes>
@@ -28,6 +30,8 @@ function App() {
             <Route path="/sign-up" element={<SignUpPage />} />
             <Route path="/sign-up/verify-email-address" element={<VerifyEmailPage />} />
             <Route path="/hackathon-demo" element={<HackathonDemoPage />} />
+            <Route path="/idea-refiner" element={<IdeaRefinerPage />} />
+            <Route path="/evidence-extractor" element={<EvidenceExtractorPage />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={

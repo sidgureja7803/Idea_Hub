@@ -21,6 +21,8 @@ import userRoutes from './routes/userRoutes.js';
 import ideaAnalysisRoutes from './routes/ideaAnalysis.js';
 import jobsRoutes from './routes/jobs.js';
 import metricsRoutes from './routes/metrics.js';
+import ideaRefinerRoutes from './routes/ideaRefinerRoutes.js';
+import evidenceExtractorRoutes from './routes/evidenceExtractorRoutes.js';
 
 // Load environment variables first - with explicit path
 import path from 'path';
@@ -73,6 +75,8 @@ app.use('/api/user', userRoutes);
 app.use('/api', ideaAnalysisRoutes);
 app.use('/api', jobsRoutes);
 app.use('/api', metricsRoutes);
+app.use('/api/refiner', ideaRefinerRoutes);
+app.use('/api/evidence', evidenceExtractorRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -1,73 +1,187 @@
-import axios from 'axios';
+import Cerebras from '@cerebras/cerebras_cloud_sdk';
 import { v4 as uuidv4 } from 'uuid';
 
 class CerebrasClient {
   constructor() {
     this.apiKey = process.env.CEREBRAS_API_KEY;
-    this.apiKey = process.env.CEREBRAS_API_KEY;
-    this.mockMode = !this.apiUrl || !this.apiKey;
+    this.mockMode = !this.apiKey;
     
     if (this.mockMode) {
       console.warn('⚠️ Cerebras API credentials not found. Running in mock mode.');
     } else {
-      console.log('✅ Cerebras API initialized');
+      // Initialize Cerebras client with the official SDK
+      this.cerebras = new Cerebras({
+        apiKey: this.apiKey
+      });
+      console.log('✅ Cerebras API initialized with official SDK');
     }
+    
+    // Default model configuration
+    this.defaultModel = 'llama-3.3-70b';
+    this.defaultConfig = {
+      max_completion_tokens: 2048,
+      temperature: 0.2,
+      top_p: 1
+    };
   }
 
   /**
-   * Generate text using Cerebras API
-   * @param {string} prompt - The prompt to send to the model
+   * Generate text using Cerebras API with official SDK
+   * @param {string|Array} input - The prompt string or messages array
    * @param {object} options - Additional options
    * @returns {Promise<{text: string, latencyMs: number}>}
    */
-  async generateText(prompt, options = {}) {
+  async generateText(input, options = {}) {
     const startTime = Date.now();
     
     try {
       // If in mock mode, return mock response
       if (this.mockMode) {
-        return this._getMockResponse(prompt, startTime);
+        return this._getMockResponse(input, startTime);
       }
       
-      // Prepare request to Cerebras API
-      const response = await axios({
-        method: 'post',
-        url: this.apiUrl,
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        data: {
-          prompt,
-          max_tokens: options.maxTokens || 1024,
-          temperature: options.temperature || 0.7,
-          stream: false
-        }
-      });
+      // Prepare messages for chat completion
+      let messages;
+      if (typeof input === 'string') {
+        messages = [
+          {
+            role: 'system',
+            content: 'You are a helpful AI assistant specialized in startup analysis and business validation.'
+          },
+          {
+            role: 'user',
+            content: input
+          }
+        ];
+      } else if (Array.isArray(input)) {
+        messages = input;
+      } else {
+        throw new Error('Input must be a string or array of messages');
+      }
+      
+      // Merge default config with provided options
+      const config = {
+        ...this.defaultConfig,
+        ...options,
+        model: options.model || this.defaultModel,
+        messages,
+        stream: false
+      };
+      
+      console.log(`🦙 Calling Cerebras API with model: ${config.model}`);
+      
+      // Call Cerebras API using official SDK
+      const response = await this.cerebras.chat.completions.create(config);
       
       const latencyMs = Date.now() - startTime;
+      const text = response.choices[0]?.message?.content || '';
+      
+      console.log(`✅ Cerebras API call completed in ${latencyMs}ms`);
       
       return {
-        text: response.data.choices[0].text,
-        latencyMs
+        text,
+        latencyMs,
+        usage: response.usage
       };
     } catch (error) {
       console.error('Error calling Cerebras API:', error.message);
-      if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
-      }
       throw new Error(`Cerebras API error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generate streaming text using Cerebras API
+   * @param {string|Array} input - The prompt string or messages array
+   * @param {Function} onToken - Callback for each token
+   * @param {object} options - Additional options
+   * @returns {Promise<{totalLatencyMs: number}>}
+   */
+  async generateStreamingText(input, onToken, options = {}) {
+    const startTime = Date.now();
+    
+    try {
+      // If in mock mode, simulate streaming
+      if (this.mockMode) {
+        return this._getMockStreamingResponse(input, onToken, startTime);
+      }
+      
+      // Prepare messages for chat completion
+      let messages;
+      if (typeof input === 'string') {
+        messages = [
+          {
+            role: 'system',
+            content: 'You are a helpful AI assistant specialized in startup analysis and business validation.'
+          },
+          {
+            role: 'user',
+            content: input
+          }
+        ];
+      } else if (Array.isArray(input)) {
+        messages = input;
+      } else {
+        throw new Error('Input must be a string or array of messages');
+      }
+      
+      // Merge default config with provided options
+      const config = {
+        ...this.defaultConfig,
+        ...options,
+        model: options.model || this.defaultModel,
+        messages,
+        stream: true
+      };
+      
+      console.log(`🦙 Starting Cerebras streaming with model: ${config.model}`);
+      
+      // Call Cerebras API for streaming
+      const stream = await this.cerebras.chat.completions.create(config);
+      
+      for await (const chunk of stream) {
+        const token = chunk.choices[0]?.delta?.content || '';
+        if (token && onToken) {
+          onToken(token);
+        }
+      }
+      
+      const totalLatencyMs = Date.now() - startTime;
+      console.log(`✅ Cerebras streaming completed in ${totalLatencyMs}ms`);
+      
+      return { totalLatencyMs };
+    } catch (error) {
+      console.error('Error in Cerebras streaming:', error.message);
+      throw new Error(`Cerebras streaming error: ${error.message}`);
     }
   }
   
   /**
-   * Generate mock response when Cerebras API credentials are not available
-   * @param {string} prompt - The original prompt
+   * Generate mock streaming response
+   * @param {string|Array} input - The original input
+   * @param {Function} onToken - Token callback
    * @param {number} startTime - Start time for latency calculation
-   * @returns {{text: string, latencyMs: number}}
+   * @returns {Promise<{totalLatencyMs: number}>}
    */
-  _getMockResponse(prompt, startTime) {
+  async _getMockStreamingResponse(input, onToken, startTime) {
+    const mockResponse = await this._getMockResponse(input, startTime);
+    const tokens = mockResponse.text.split(' ');
+    
+    // Simulate streaming by sending tokens with delays
+    for (const token of tokens) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      onToken(token + ' ');
+    }
+    
+    return { totalLatencyMs: Date.now() - startTime };
+  }
+
+  /**
+   * Generate mock response when Cerebras API credentials are not available
+   * @param {string|Array} input - The original input
+   * @param {number} startTime - Start time for latency calculation
+   * @returns {Promise<{text: string, latencyMs: number}>}
+   */
+  _getMockResponse(input, startTime) {
     // Simulate network delay
     const mockLatency = Math.floor(Math.random() * 1500) + 500;
     
@@ -158,15 +272,16 @@ class CerebrasClient {
           }
         };
         
-        // Determine which type of response to return based on prompt content
+        // Determine which type of response to return based on input content
+        const inputText = typeof input === 'string' ? input : JSON.stringify(input);
         let responseType = 'aggregator';
-        if (prompt.toLowerCase().includes('market') && prompt.toLowerCase().includes('snapshot')) {
+        if (inputText.toLowerCase().includes('market') && inputText.toLowerCase().includes('snapshot')) {
           responseType = 'marketSnapshot';
-        } else if (prompt.toLowerCase().includes('tam') || prompt.toLowerCase().includes('market size')) {
+        } else if (inputText.toLowerCase().includes('tam') || inputText.toLowerCase().includes('market size')) {
           responseType = 'tam';
-        } else if (prompt.toLowerCase().includes('competition') || prompt.toLowerCase().includes('competitor')) {
+        } else if (inputText.toLowerCase().includes('competition') || inputText.toLowerCase().includes('competitor')) {
           responseType = 'competition';
-        } else if (prompt.toLowerCase().includes('feasibility') || prompt.toLowerCase().includes('viable')) {
+        } else if (inputText.toLowerCase().includes('feasibility') || inputText.toLowerCase().includes('viable')) {
           responseType = 'feasibility';
         }
         

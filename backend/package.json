@@ -8,7 +8,8 @@
     "dev": "nodemon src/index.js",
     "worker": "node src/worker/startWorker.js",
     "dev:worker": "nodemon src/worker/startWorker.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:cerebras": "node test-cerebras.js"
   },
   "keywords": [
     "startup",

@@ -1,97 +1,145 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Lightbulb, Github, Twitter, Linkedin } from 'lucide-react';
+import { Brain, Lightbulb, Github, Twitter, Linkedin, Cpu, Zap, Globe, Mail } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
     <motion.footer 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto"
+      className="bg-dark-900/50 border-t border-white/10 mt-auto backdrop-blur-sm"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Logo & Description */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center space-x-3 mb-6">
               <div className="relative">
-                <Brain className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                <Lightbulb className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-primary-500 to-accent-cyan p-2.5">
+                  <Brain className="h-7 w-7 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-r from-accent-orange to-accent-purple p-1">
+                  <Lightbulb className="h-4 w-4 text-white" />
+                </div>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                IdeaHub
-              </span>
+              <div>
+                <span className="text-2xl font-black gradient-text">
+                  IdeaHub
+                </span>
+                <div className="text-xs text-dark-400 font-medium">
+                  Powered by Cerebras + Llama
+                </div>
+              </div>
             </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-              AI-powered platform that helps aspiring founders analyze and validate their startup ideas using real-time market research and competitive intelligence.
+            <p className="text-dark-300 mb-6 max-w-md leading-relaxed">
+              Transform your startup ideas into comprehensive, data-driven market analyses with AI-powered insights. 
+              Validate faster, launch smarter.
             </p>
+            
+            {/* Tech Stack */}
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="flex items-center space-x-2 px-3 py-1 rounded-full glass-effect">
+                <Cpu className="h-4 w-4 text-accent-cyan" />
+                <span className="text-xs font-medium text-white">Cerebras</span>
+              </div>
+              <div className="flex items-center space-x-2 px-3 py-1 rounded-full glass-effect">
+                <Brain className="h-4 w-4 text-accent-purple" />
+                <span className="text-xs font-medium text-white">Llama 3</span>
+              </div>
+              <div className="flex items-center space-x-2 px-3 py-1 rounded-full glass-effect">
+                <Zap className="h-4 w-4 text-accent-emerald" />
+                <span className="text-xs font-medium text-white">Multi-Agent AI</span>
+              </div>
+            </div>
+
+            {/* Social Links */}
             <div className="flex space-x-4">
               <a
                 href="#"
-                className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                className="w-10 h-10 rounded-lg glass-effect flex items-center justify-center text-dark-400 hover:text-primary-400 transition-colors duration-200 group"
                 aria-label="Twitter"
               >
-                <Twitter className="h-5 w-5" />
+                <Twitter className="h-5 w-5 group-hover:animate-pulse" />
               </a>
               <a
                 href="#"
-                className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                className="w-10 h-10 rounded-lg glass-effect flex items-center justify-center text-dark-400 hover:text-primary-400 transition-colors duration-200 group"
                 aria-label="LinkedIn"
               >
-                <Linkedin className="h-5 w-5" />
+                <Linkedin className="h-5 w-5 group-hover:animate-pulse" />
               </a>
               <a
                 href="#"
-                className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                className="w-10 h-10 rounded-lg glass-effect flex items-center justify-center text-dark-400 hover:text-primary-400 transition-colors duration-200 group"
                 aria-label="GitHub"
               >
-                <Github className="h-5 w-5" />
+                <Github className="h-5 w-5 group-hover:animate-pulse" />
               </a>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Platform Links */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4">
+            <h3 className="text-sm font-bold text-white tracking-wider uppercase mb-6 flex items-center">
+              <Globe className="h-4 w-4 mr-2 text-primary-400" />
               Platform
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               <li>
-                <a href="/" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+                <a href="/" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                  <span className="w-1 h-1 rounded-full bg-primary-400 mr-3 group-hover:animate-pulse"></span>
                   Home
                 </a>
               </li>
               <li>
-                <a href="/submit" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
-                  Submit Idea
+                <a href="/submit" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                  <span className="w-1 h-1 rounded-full bg-primary-400 mr-3 group-hover:animate-pulse"></span>
+                  Validate Idea
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
-                  How it Works
+                <a href="/dashboard" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                  <span className="w-1 h-1 rounded-full bg-primary-400 mr-3 group-hover:animate-pulse"></span>
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="/hackathon-demo" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                  <span className="w-1 h-1 rounded-full bg-accent-purple mr-3 group-hover:animate-pulse"></span>
+                  Live Demo
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Resources */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4">
-              Support
+            <h3 className="text-sm font-bold text-white tracking-wider uppercase mb-6 flex items-center">
+              <Mail className="h-4 w-4 mr-2 text-accent-cyan" />
+              Resources
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+                <a href="#" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                  <span className="w-1 h-1 rounded-full bg-accent-cyan mr-3 group-hover:animate-pulse"></span>
                   Documentation
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
-                  Contact
+                <a href="#" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                  <span className="w-1 h-1 rounded-full bg-accent-cyan mr-3 group-hover:animate-pulse"></span>
+                  API Reference
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+                <a href="#" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                  <span className="w-1 h-1 rounded-full bg-accent-cyan mr-3 group-hover:animate-pulse"></span>
+                  Support
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                  <span className="w-1 h-1 rounded-full bg-accent-cyan mr-3 group-hover:animate-pulse"></span>
                   Privacy Policy
                 </a>
               </li>
@@ -99,10 +147,20 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            © 2025 IdeaHub. All rights reserved. Powered by AI.
-          </p>
+        {/* Bottom Section */}
+        <div className="mt-12 pt-8 border-t border-white/10">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-dark-400 text-sm">
+              © 2025 IdeaHub. All rights reserved. Built with ❤️ for entrepreneurs.
+            </p>
+            <div className="flex items-center space-x-6 text-sm text-dark-400">
+              <span className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-accent-emerald animate-pulse"></div>
+                <span>System Operational</span>
+              </span>
+              <span>v1.0.0</span>
+            </div>
+          </div>
         </div>
       </div>
     </motion.footer>
