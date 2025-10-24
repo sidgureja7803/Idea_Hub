@@ -90,12 +90,12 @@ const Functionality: React.FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: 0.3 }}
             >
-              <Link to="/submit" className="btn-primary px-6 py-3 rounded-lg">
+              <Link to="/validate-idea" className="btn-primary px-6 py-3 rounded-lg">
                 <span className="mr-2">+</span>
-                Add Idea
+                Validate Idea
               </Link>
-              <Link to="/dashboard" className="btn-ghost px-6 py-3 rounded-lg border border-gray-700">
-                Dashboard
+              <Link to="/my-ideas" className="btn-ghost px-6 py-3 rounded-lg border border-gray-700">
+                My Ideas
               </Link>
               <Link to="/gallery" className="btn-ghost px-6 py-3 rounded-lg border border-gray-700">
                 <span className="mr-2">🖼️</span>
