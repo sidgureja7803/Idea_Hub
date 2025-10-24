@@ -1,25 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import http from 'http';
 import socketManager from './utils/socketManager.js';
 
 // Import routes
-import ideaRoutes from './routes/ideas.js';
 import ideaRoutesV2 from './routes/ideaRoutes.js';
-import analysisRoutes from './routes/analysis.js';
-import reportRoutes from './routes/reports.js';
 import streamingRoutes from './routes/streamingRoutes.js';
 import copilotRoutes from './routes/copilotRoutes.js';
-import creditRoutes from './routes/creditRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import authRoutes from './routes/auth.js';
-import userRoutes from './routes/userRoutes.js';
-import ideaAnalysisRoutes from './routes/ideaAnalysis.js';
-import jobsRoutes from './routes/jobs.js';
+import authRoutesV2 from './routes/authRoutes.js';
 import metricsRoutes from './routes/metrics.js';
 import ideaRefinerRoutes from './routes/ideaRefinerRoutes.js';
 import evidenceExtractorRoutes from './routes/evidenceExtractorRoutes.js';
@@ -32,11 +24,11 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 console.log('Environment variables loaded from:', path.resolve(__dirname, '../.env'));
 
 // Check for required environment variables
-if (!process.env.CEREBRAS_API_KEY || !process.env.TAVILY_API_KEY) {
-  console.warn('⚠️ Warning: Missing required API keys. Set CEREBRAS_API_KEY and TAVILY_API_KEY in your .env file.');
+if (!process.env.CEREBRAS_API_KEY || !process.env.APPWRITE_API_KEY) {
+  console.warn('⚠️ Warning: Missing required API keys. Set CEREBRAS_API_KEY and APPWRITE_API_KEY in your .env file.');
 } else {
   console.log('✅ API Keys loaded successfully. CEREBRAS_API_KEY:', process.env.CEREBRAS_API_KEY ? 'Found (value hidden for security)' : 'Not found');
-  console.log('✅ API Keys loaded successfully. TAVILY_API_KEY:', process.env.TAVILY_API_KEY ? 'Found (value hidden for security)' : 'Not found');
+  console.log('✅ API Keys loaded successfully. APPWRITE_API_KEY:', process.env.APPWRITE_API_KEY ? 'Found (value hidden for security)' : 'Not found');
 }
 
 const app = express();
@@ -58,23 +50,23 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    services: {
+      appwrite: process.env.APPWRITE_API_KEY ? 'configured' : 'missing key',
+      cerebras: process.env.CEREBRAS_API_KEY ? 'configured' : 'missing key'
+    }
+  });
 });
 
 // Routes
-app.use('/api', ideaRoutes);
-app.use('/api/ideas', ideaRoutesV2);  // New idea routes with follow-up questions
-app.use('/api', analysisRoutes);
-app.use('/api', reportRoutes);
-app.use('/api', streamingRoutes);
-app.use('/api', copilotRoutes);
-app.use('/api', creditRoutes);
-app.use('/api', adminRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api', ideaAnalysisRoutes);
-app.use('/api', jobsRoutes);
-app.use('/api', metricsRoutes);
+app.use('/api/ideas', ideaRoutesV2);
+app.use('/api/streaming', streamingRoutes);
+app.use('/api/copilot', copilotRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutesV2);
+app.use('/api/metrics', metricsRoutes);
 app.use('/api/refiner', ideaRefinerRoutes);
 app.use('/api/evidence', evidenceExtractorRoutes);
 
@@ -92,22 +84,13 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    
-    // Start server
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`🔌 WebSocket server initialized for real-time events`);
-      console.log(`🧠 LangChain+LangGraph agents ready`);
-    });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
+// Start server (without MongoDB)
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔌 WebSocket server initialized for real-time events`);
+  console.log(`🧠 LangChain+LangGraph agents ready`);
+  console.log(`📝 Using Appwrite for authentication and database`);
+});
 
 export default app;

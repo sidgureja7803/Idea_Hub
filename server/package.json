@@ -38,6 +38,7 @@
     "langchain": "^0.3.30",
     "mongodb": "^6.18.0",
     "mongoose": "^8.16.4",
+    "node-appwrite": "^20.2.1",
     "socket.io": "^4.8.1",
     "uuid": "^11.1.0"
   },

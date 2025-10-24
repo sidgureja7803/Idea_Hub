@@ -1,36 +1,35 @@
 /**
  * Idea Routes
- * Handles routes for idea submission, follow-up questions, and idea enhancement
+ * Handles all idea-related API endpoints
  */
 
-import express from 'express';
-import { submitIdea, generateQuestions, enhanceIdea } from '../controllers/ideaController.js';
-import { requireAuth, optionalAuth } from '../middleware/auth.js';
-import { checkSearchLimits, trackSearchSubmission } from '../middleware/searchTracking.js';
-
+const express = require('express');
 const router = express.Router();
+const ideaController = require('../controllers/ideaController');
+const authMiddleware = require('../middleware/auth');
 
-// Submit new idea for analysis (requires authentication and checks search limits)
-router.post('/analyze-idea', requireAuth, checkSearchLimits, submitIdea, trackSearchSubmission);
+// Apply auth middleware to all routes
+router.use(authMiddleware);
 
-// Generate follow-up questions based on the initial idea
-router.post('/generate-questions', optionalAuth, generateQuestions);
+// Create a new idea
+router.post('/', ideaController.createIdea);
 
-// Enhance the idea based on follow-up question answers
-router.post('/enhance-idea', optionalAuth, enhanceIdea);
+// Get all ideas for current user
+router.get('/my-ideas', ideaController.getUserIdeas);
 
-// Get user's own ideas (search history)
-router.get('/my-ideas', requireAuth, async (req, res) => {
-  try {
-    // This will be handled by the user routes, but we can add a direct endpoint here too
-    res.redirect('/api/user/history');
-  } catch (error) {
-    console.error('Error fetching user ideas:', error);
-    res.status(500).json({
-      message: 'Failed to fetch user ideas',
-      error: error.message
-    });
-  }
-});
+// Get all public ideas
+router.get('/public', ideaController.getPublicIdeas);
 
-export default router;
+// Get idea by ID
+router.get('/:ideaId', ideaController.getIdea);
+
+// Update idea
+router.put('/:ideaId', ideaController.updateIdea);
+
+// Delete idea
+router.delete('/:ideaId', ideaController.deleteIdea);
+
+// Get job status
+router.get('/job/:jobId', ideaController.getJobStatus);
+
+module.exports = router;

@@ -1,196 +1,308 @@
 /**
  * Idea Controller
- * Handles idea submission, follow-up questions, and idea enhancement
+ * Handles idea-related API endpoints
  */
 
-import { v4 as uuidv4 } from 'uuid';
-import Idea from '../models/Idea.js';
-import { enqueueIdeaAnalysis } from '../queue/queueConfig.js';
-import getCerebrasService from '../services/cerebrasService.js';
-import { TASK_COMPLEXITY } from '../constants/cerebras.js';
-
-// Get Cerebras service instance
-const cerebrasService = getCerebrasService();
+const appwriteService = require('../services/appwriteService');
+const ideaOrchestrator = require('../agents/graph/ideaOrchestrator');
 
 /**
- * Submit a new idea for analysis
+ * Create a new idea and start analysis
  */
-export const submitIdea = async (req, res) => {
+const createIdea = async (req, res) => {
   try {
-    const { description, category, targetAudience, problemSolved, title } = req.body;
-
-    // Validate required fields
-    if (!description || !category || !problemSolved) {
+    const { title, description, isPublic } = req.body;
+    const userId = req.userId; // Extracted from auth middleware
+    
+    if (!title || !description) {
       return res.status(400).json({
-        message: 'Missing required fields: description, category, and problemSolved are required'
+        success: false,
+        message: 'Title and description are required'
       });
     }
-
-    // Create new idea record
-    const ideaId = uuidv4();
-    const idea = new Idea({
-      id: ideaId,
-      description,
-      category,
-      targetAudience,
-      problemSolved,
-      status: 'pending'
-    });
-
-    await idea.save();
-
-    // Add idea to job queue
-    const ideaData = {
-      ideaId,
-      description,
-      category,
-      targetAudience,
-      problemSolved
-    };
     
-    const job = await enqueueIdeaAnalysis(ideaData);
-
-    // Prepare data for tracking
-    req.trackedSearch = {
-      ideaId,
-      jobId: job.id,
-      title: title || `${category} Business Idea`,
-      description,
-      category
-    };
-
-    res.status(201).json({
-      message: 'Idea submitted successfully',
-      jobId: job.id,
-      analysisId: ideaId,
-      userStats: req.userStats
-    });
-  } catch (error) {
-    console.error('Error submitting idea:', error);
-    res.status(500).json({
-      message: 'Failed to submit idea',
-      error: error.message
-    });
-  }
-};
-
-/**
- * Generate follow-up questions based on the initial idea
- */
-export const generateQuestions = async (req, res) => {
-  try {
-    const { ideaDescription } = req.body;
-
-    if (!ideaDescription) {
-      return res.status(400).json({
-        message: 'Missing required field: ideaDescription'
+    // Check free tier limits
+    const tierInfo = await appwriteService.checkFreeTierLimit(userId);
+    if (tierInfo.reachedLimit) {
+      return res.status(403).json({
+        success: false,
+        message: 'Free tier limit reached. Maximum 5 ideas allowed.'
       });
     }
-
-    // System prompt for generating follow-up questions
-    const systemPrompt = `You are an expert startup analyst using Llama models on Cerebras infrastructure.
-    Based on the startup idea description provided, generate exactly 3 follow-up questions that would 
-    help you better understand and evaluate the business idea. 
     
-    Your questions should:
-    1. Be specific and targeted to gather critical information missing from the initial description
-    2. Focus on market fit, competitive advantage, and execution strategy
-    3. Help the founder think more deeply about their idea
+    // Create the idea in database
+    const idea = await appwriteService.createIdea({
+      userId,
+      title,
+      description,
+      isPublic: isPublic || false
+    });
     
-    Format your response as a JSON array of exactly 3 questions, like this:
-    ["Question 1", "Question 2", "Question 3"]
+    // Start the analysis process with agent orchestration
+    const jobId = idea.$id; // Use idea ID as job ID
     
-    Do not include any other text in your response.`;
-
-    // Call Cerebras service to generate questions
-    const result = await cerebrasService.generateStructuredOutput(
-      systemPrompt,
-      ideaDescription,
-      { temperature: 0.7, max_completion_tokens: 1024 },
-      TASK_COMPLEXITY.MEDIUM
-    );
-
-    // Parse the response as JSON
-    let questions;
-    try {
-      questions = JSON.parse(result);
-      
-      // Ensure we have exactly 3 questions
-      if (!Array.isArray(questions) || questions.length !== 3) {
-        throw new Error('Invalid response format');
+    // Queue the analysis job (this runs asynchronously)
+    ideaOrchestrator.run(description, jobId)
+      .then(async (result) => {
+        // Once analysis is complete, save results to Appwrite
+        await appwriteService.saveAnalysisResults(idea.$id, result);
+      })
+      .catch(async (error) => {
+        console.error('Error during idea analysis:', error);
+        // Update job status with error
+        await appwriteService.saveJobStatus(jobId, {
+          status: 'failed',
+          error: error.message
+        });
+      });
+    
+    // Save initial job status
+    await appwriteService.saveJobStatus(jobId, {
+      ideaId: idea.$id,
+      userId,
+      status: 'processing',
+      progress: 0
+    });
+    
+    // Return the created idea and job ID
+    return res.status(201).json({
+      success: true,
+      data: {
+        idea,
+        jobId
       }
-    } catch (parseError) {
-      console.error('Error parsing questions:', parseError);
-      
-      // Fallback questions if parsing fails
-      questions = [
-        "What specific problem does your idea solve for your target audience?",
-        "Who are your main competitors and how is your solution different?",
-        "What is your plan for acquiring early customers or users?"
-      ];
-    }
-
-    res.json({ questions });
+    });
+    
   } catch (error) {
-    console.error('Error generating questions:', error);
-    res.status(500).json({
-      message: 'Failed to generate questions',
-      error: error.message
+    console.error('Error creating idea:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
 
 /**
- * Enhance the idea based on follow-up question answers
+ * Get idea by ID
  */
-export const enhanceIdea = async (req, res) => {
+const getIdea = async (req, res) => {
   try {
-    const { initialIdea, questions, answers } = req.body;
-
-    if (!initialIdea || !questions || !answers) {
-      return res.status(400).json({
-        message: 'Missing required fields: initialIdea, questions, and answers are required'
+    const { ideaId } = req.params;
+    const userId = req.userId; // Extracted from auth middleware
+    
+    const idea = await appwriteService.getIdea(ideaId);
+    
+    // Check if idea exists
+    if (!idea) {
+      return res.status(404).json({
+        success: false,
+        message: 'Idea not found'
       });
     }
-
-    // Format the questions and answers for the prompt
-    const questionsAndAnswers = questions.map((q, i) => 
-      `Question: ${q}\nAnswer: ${answers[i] || 'No answer provided'}`
-    ).join('\n\n');
-
-    // System prompt for enhancing the idea
-    const systemPrompt = `You are an expert startup analyst using Llama models on Cerebras infrastructure.
-    You will be given an initial startup idea description, followed by a set of follow-up questions and answers.
     
-    Your task is to enhance and refine the original idea based on the additional information provided in the answers.
-    Create a comprehensive, well-structured description that incorporates all the key details from both the 
-    original idea and the follow-up answers.
+    // Check if user has access (either owner or public)
+    if (idea.userId !== userId && !idea.isPublic) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
     
-    The enhanced description should:
-    1. Be clear, concise, and professionally written
-    2. Include all relevant information from both the original idea and the follow-up answers
-    3. Be structured in a logical way that would help with further analysis
-    4. Be between 200-400 words in length
+    // Get analysis results if available
+    const analysisResults = await appwriteService.getAnalysisResults(ideaId);
     
-    Respond with ONLY the enhanced description, without any additional commentary.`;
-
-    // Combine the initial idea with questions and answers
-    const userInput = `Initial Idea:\n${initialIdea}\n\nFollow-up Information:\n${questionsAndAnswers}`;
-
-    // Call Cerebras service to enhance the idea
-    const enhancedIdea = await cerebrasService.generateStructuredOutput(
-      systemPrompt,
-      userInput,
-      { temperature: 0.7, max_completion_tokens: 2048 },
-      TASK_COMPLEXITY.HEAVY
-    );
-
-    res.json({ enhancedIdea });
+    return res.json({
+      success: true,
+      data: {
+        idea,
+        analysisResults: analysisResults ? analysisResults.results : null
+      }
+    });
+    
   } catch (error) {
-    console.error('Error enhancing idea:', error);
-    res.status(500).json({
-      message: 'Failed to enhance idea',
-      error: error.message
+    console.error('Error getting idea:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
+};
+
+/**
+ * Get all ideas for current user
+ */
+const getUserIdeas = async (req, res) => {
+  try {
+    const userId = req.userId; // Extracted from auth middleware
+    
+    const ideas = await appwriteService.getUserIdeas(userId);
+    
+    // Return ideas with tier info
+    const tierInfo = await appwriteService.checkFreeTierLimit(userId);
+    
+    return res.json({
+      success: true,
+      data: {
+        ideas,
+        tierInfo
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error getting user ideas:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Get all public ideas
+ */
+const getPublicIdeas = async (req, res) => {
+  try {
+    const ideas = await appwriteService.getPublicIdeas();
+    
+    return res.json({
+      success: true,
+      data: ideas
+    });
+    
+  } catch (error) {
+    console.error('Error getting public ideas:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Update an existing idea
+ */
+const updateIdea = async (req, res) => {
+  try {
+    const { ideaId } = req.params;
+    const { title, description, isPublic } = req.body;
+    const userId = req.userId; // Extracted from auth middleware
+    
+    // Check if idea exists and belongs to user
+    const idea = await appwriteService.getIdea(ideaId);
+    
+    if (!idea) {
+      return res.status(404).json({
+        success: false,
+        message: 'Idea not found'
+      });
+    }
+    
+    if (idea.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+    
+    // Update the idea
+    const updatedIdea = await appwriteService.updateIdea(ideaId, {
+      title,
+      description,
+      isPublic
+    });
+    
+    return res.json({
+      success: true,
+      data: updatedIdea
+    });
+    
+  } catch (error) {
+    console.error('Error updating idea:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Delete an idea
+ */
+const deleteIdea = async (req, res) => {
+  try {
+    const { ideaId } = req.params;
+    const userId = req.userId; // Extracted from auth middleware
+    
+    // Check if idea exists and belongs to user
+    const idea = await appwriteService.getIdea(ideaId);
+    
+    if (!idea) {
+      return res.status(404).json({
+        success: false,
+        message: 'Idea not found'
+      });
+    }
+    
+    if (idea.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+    
+    // Delete the idea
+    await appwriteService.deleteIdea(ideaId);
+    
+    return res.json({
+      success: true,
+      message: 'Idea deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error deleting idea:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Get job status
+ */
+const getJobStatus = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    
+    const job = await appwriteService.getJobStatus(jobId);
+    
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+    
+    return res.json({
+      success: true,
+      data: job
+    });
+    
+  } catch (error) {
+    console.error('Error getting job status:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+module.exports = {
+  createIdea,
+  getIdea,
+  getUserIdeas,
+  getPublicIdeas,
+  updateIdea,
+  deleteIdea,
+  getJobStatus
 };
