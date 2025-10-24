@@ -1,6 +1,5 @@
 **/node_modules/
 server/node_modules/
-server/.env
 .env
 *.env
 .env.*
