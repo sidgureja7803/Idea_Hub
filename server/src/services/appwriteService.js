@@ -4,20 +4,21 @@
  */
 
 const sdk = require('node-appwrite');
-const { Client, Databases, Users, ID, Permission, Role } = sdk;
+const { Client, Databases, Users, ID, Permission, Role, Storage } = sdk;
 
 // Initialize Appwrite client
 const client = new Client()
-  .setEndpoint('https://cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
-  .setProject('foundriQ') // Replace with your project ID
-  .setKey(process.env.APPWRITE_API_KEY); // Use server API key from env vars
+  .setEndpoint(process.env.APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1')
+  .setProject(process.env.APPWRITE_PROJECT_ID) 
+  .setKey(process.env.APPWRITE_API_KEY);
 
 // Initialize Appwrite services
 const databases = new Databases(client);
 const users = new Users(client);
+const storage = new Storage(client);
 
 // Collection and database IDs
-const DATABASE_ID = 'foundriQ';
+const DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
 const COLLECTIONS = {
   IDEAS: 'ideas',
   USERS: 'users',
@@ -25,10 +26,33 @@ const COLLECTIONS = {
   JOBS: 'jobs'
 };
 
+const BUCKETS = {
+  REPORTS: process.env.APPWRITE_REPORTS_BUCKET_ID,
+  DOCUMENTS: process.env.APPWRITE_DOCUMENTS_BUCKET_ID
+};
+
 /**
  * Appwrite service for backend operations
  */
 class AppwriteService {
+  constructor() {
+    if (!process.env.APPWRITE_API_KEY) {
+      console.error("APPWRITE_API_KEY is not defined in environment variables");
+    }
+    if (!process.env.APPWRITE_PROJECT_ID) {
+      console.error("APPWRITE_PROJECT_ID is not defined in environment variables");
+    }
+    if (!process.env.APPWRITE_DATABASE_ID) {
+      console.error("APPWRITE_DATABASE_ID is not defined in environment variables");
+    }
+    if (!process.env.APPWRITE_REPORTS_BUCKET_ID) {
+      console.warn("APPWRITE_REPORTS_BUCKET_ID is not defined in environment variables");
+    }
+    if (!process.env.APPWRITE_DOCUMENTS_BUCKET_ID) {
+      console.warn("APPWRITE_DOCUMENTS_BUCKET_ID is not defined in environment variables");
+    }
+  }
+
   /**
    * Create a new idea document
    * @param {object} ideaData - Idea data to save
@@ -324,6 +348,40 @@ class AppwriteService {
     } catch (error) {
       console.error('Appwrite Error - Get Job Status:', error);
       throw new Error(`Failed to get job status: ${error.message}`);
+    }
+  }
+
+  /**
+   * Upload report file to storage
+   * @param {string} fileContent - File content as string
+   * @param {string} fileName - File name
+   * @param {string} userId - User ID
+   * @returns {Promise<object>} Uploaded file info
+   */
+  async uploadReport(fileContent, fileName, userId) {
+    if (!BUCKETS.REPORTS) {
+      throw new Error('Reports bucket ID not configured');
+    }
+
+    try {
+      const blob = new Blob([fileContent], { type: 'application/pdf' });
+      const file = await storage.createFile(
+        BUCKETS.REPORTS,
+        ID.unique(),
+        blob,
+        {
+          name: fileName,
+          userId: userId,
+          uploadDate: new Date().toISOString()
+        },
+        [
+          Permission.read(Role.user(userId))
+        ]
+      );
+      return file;
+    } catch (error) {
+      console.error('Appwrite Error - Upload Report:', error);
+      throw new Error(`Failed to upload report: ${error.message}`);
     }
   }
   

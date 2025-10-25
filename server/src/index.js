@@ -24,12 +24,29 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 console.log('Environment variables loaded from:', path.resolve(__dirname, '../.env'));
 
 // Check for required environment variables
-if (!process.env.CEREBRAS_API_KEY || !process.env.APPWRITE_API_KEY) {
-  console.warn('⚠️ Warning: Missing required API keys. Set CEREBRAS_API_KEY and APPWRITE_API_KEY in your .env file.');
+const requiredVars = [
+  'CEREBRAS_API_KEY', 
+  'APPWRITE_API_KEY',
+  'APPWRITE_PROJECT_ID',
+  'APPWRITE_ENDPOINT',
+  'APPWRITE_DATABASE_ID'
+];
+
+const missingVars = requiredVars.filter(varName => !process.env[varName]);
+if (missingVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingVars.join(', '));
+  console.error('Please add them to your .env file');
 } else {
-  console.log('✅ API Keys loaded successfully. CEREBRAS_API_KEY:', process.env.CEREBRAS_API_KEY ? 'Found (value hidden for security)' : 'Not found');
-  console.log('✅ API Keys loaded successfully. APPWRITE_API_KEY:', process.env.APPWRITE_API_KEY ? 'Found (value hidden for security)' : 'Not found');
+  console.log('✅ All required environment variables are present');
 }
+
+// Log optional variables status
+const optionalVars = ['APPWRITE_REPORTS_BUCKET_ID', 'APPWRITE_DOCUMENTS_BUCKET_ID', 'TAVILY_API_KEY'];
+optionalVars.forEach(varName => {
+  if (!process.env[varName]) {
+    console.warn(`⚠️ Optional variable ${varName} is not set`);
+  }
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -50,13 +67,26 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Health check
 app.get('/health', (req, res) => {
+  const requiredServices = {
+    appwrite: process.env.APPWRITE_API_KEY && process.env.APPWRITE_PROJECT_ID && process.env.APPWRITE_DATABASE_ID,
+    cerebras: process.env.CEREBRAS_API_KEY
+  };
+  
+  const missingServices = Object.entries(requiredServices)
+    .filter(([_, isConfigured]) => !isConfigured)
+    .map(([name]) => name);
+  
+  const status = missingServices.length === 0 ? 'OK' : 'DEGRADED';
+  
   res.json({ 
-    status: 'OK', 
+    status, 
     timestamp: new Date().toISOString(),
     services: {
-      appwrite: process.env.APPWRITE_API_KEY ? 'configured' : 'missing key',
-      cerebras: process.env.CEREBRAS_API_KEY ? 'configured' : 'missing key'
-    }
+      appwrite: requiredServices.appwrite ? 'configured' : 'missing configuration',
+      cerebras: requiredServices.cerebras ? 'configured' : 'missing key',
+      storage: process.env.APPWRITE_REPORTS_BUCKET_ID ? 'configured' : 'not configured'
+    },
+    missingServices: missingServices.length > 0 ? missingServices : undefined
   });
 });
 
@@ -84,13 +114,18 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Start server (without MongoDB)
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔌 WebSocket server initialized for real-time events`);
-  console.log(`🧠 LangChain+LangGraph agents ready`);
-  console.log(`📝 Using Appwrite for authentication and database`);
-});
+// Only start server if all required variables are present
+if (missingVars.length === 0) {
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔌 WebSocket server initialized for real-time events`);
+    console.log(`🧠 LangChain+LangGraph agents ready with Cerebras integration`);
+    console.log(`📝 Using Appwrite for authentication and database (${process.env.APPWRITE_DATABASE_ID})`);
+  });
+} else {
+  console.error('Server not started due to missing environment variables');
+  process.exit(1);
+}
 
 export default app;
