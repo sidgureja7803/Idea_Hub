@@ -92,15 +92,15 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="/submit" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                <a href="/validate-idea" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
                   <span className="w-1 h-1 rounded-full bg-primary-400 mr-3 group-hover:animate-pulse"></span>
                   Validate Idea
                 </a>
               </li>
               <li>
-                <a href="/dashboard" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                <a href="/my-ideas" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
                   <span className="w-1 h-1 rounded-full bg-primary-400 mr-3 group-hover:animate-pulse"></span>
-                  Dashboard
+                  My Ideas
                 </a>
               </li>
               <li>
@@ -132,13 +132,13 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="#" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                <a href="/terms" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
                   <span className="w-1 h-1 rounded-full bg-accent-cyan mr-3 group-hover:animate-pulse"></span>
-                  Support
+                  Terms of Service
                 </a>
               </li>
               <li>
-                <a href="#" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
+                <a href="/privacy" className="text-dark-300 hover:text-white transition-colors duration-200 flex items-center group">
                   <span className="w-1 h-1 rounded-full bg-accent-cyan mr-3 group-hover:animate-pulse"></span>
                   Privacy Policy
                 </a>

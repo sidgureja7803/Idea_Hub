@@ -30,6 +30,7 @@ export const AGENT_IDS = {
   IDEA_NORMALIZER: 'idea-normalizer',
   MARKET_SEARCHER: 'market-searcher',
   MARKET_SIZER: 'market-sizer',
+  RESEARCH_ORCHESTRATOR: 'research-orchestrator',
 };
 
 export const AGENT_STATUSES = {

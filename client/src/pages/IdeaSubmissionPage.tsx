@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ideaService } from '../services/appwrite';
-import { AlertCircle, Lightbulb, Send } from 'lucide-react';
-import Header from '../components/layout/Header';
+import { AlertCircle, Lightbulb, Send, Sparkles } from 'lucide-react';
+import SimpleHeader from '../components/layout/SimpleHeader';
 import Footer from '../components/layout/Footer';
 
 const IdeaSubmissionPage: React.FC = () => {
@@ -64,142 +64,147 @@ const IdeaSubmissionPage: React.FC = () => {
   
   // Sample ideas for inspiration
   const sampleIdeas = [
-    "A subscription service for curated plant care boxes based on your specific houseplants.",
-    "An app that uses AI to identify clothing items from photos and finds similar affordable alternatives.",
-    "A smart water bottle that syncs with fitness apps and reminds you to hydrate based on your activity level.",
-    "A marketplace connecting home chefs with local customers for authentic homemade meals."
+    {
+      title: "Farm-to-Table Delivery",
+      description: "A mobile app that connects local farmers with urban consumers for fresh, farm-to-table produce deliveries."
+    },
+    {
+      title: "Remote Work Coaching",
+      description: "A personalized coaching service helping remote workers improve productivity and work-life balance through tailored strategies."
+    },
+    {
+      title: "Eco-Friendly Travel Gadgets",
+      description: "An eco-friendly gadget designed for sustainable travel, combining convenience with environmentally conscious materials."
+    },
+    {
+      title: "Niche Hobby Platform",
+      description: "An online platform that enables niche hobbyists to buy, sell, and share custom-made accessories and collectibles."
+    }
   ];
   
-  const handleUseSampleIdea = (idea: string) => {
-    setDescription(idea);
+  const handleUseSampleIdea = (idea: typeof sampleIdeas[0]) => {
+    setTitle(idea.title);
+    setDescription(idea.description);
   };
+  
+  const wordCount = description.trim().split(/\s+/).filter(word => word.length > 0).length;
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
-      <Header />
+      <SimpleHeader />
       
-      <main className="flex-grow container mx-auto px-4 py-12">
+      <main className="flex-grow container mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="max-w-4xl mx-auto"
         >
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold mb-3">Validate Your Idea</h1>
-              <p className="text-gray-400 max-w-xl mx-auto">
-                Describe your business idea below and our AI will analyze its market potential, 
-                competitive landscape, and provide strategic recommendations.
-              </p>
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">What's your next big idea?</h1>
+            <p className="text-xl text-dark-400 max-w-2xl mx-auto">
+              Describe your business concept and let our AI help you develop it
+            </p>
+          </div>
+          
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl flex items-center gap-2 text-red-200"
+            >
+              <AlertCircle size={20} />
+              <span>{error}</span>
+              <button 
+                onClick={() => setError(null)}
+                className="ml-auto text-dark-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </motion.div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="relative">
+            {/* Word count display */}
+            <div className="absolute top-4 right-4 z-10">
+              <span className="text-sm text-dark-400">{wordCount} words</span>
             </div>
             
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg flex items-center gap-2 text-red-200"
-              >
-                <AlertCircle size={20} />
-                <span>{error}</span>
-                <button 
-                  onClick={() => setError(null)}
-                  className="ml-auto text-gray-400 hover:text-white"
-                >
-                  ✕
-                </button>
-              </motion.div>
-            )}
+            {/* Main textarea */}
+            <div className="mb-8">
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="block w-full p-6 pt-12 bg-dark-900/50 border border-dark-700 rounded-xl text-white placeholder-dark-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[320px] text-lg"
+                placeholder="Start with a short description of your idea..."
+                required
+              />
+            </div>
             
-            <form onSubmit={handleSubmit} className="bg-gray-900/70 border border-gray-800 rounded-xl p-6 shadow-lg">
-              <div className="mb-6">
-                <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-2">
-                  Idea Title
-                </label>
-                <input
-                  id="title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="block w-full p-3 bg-gray-800/70 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="E.g., AI-Powered Meal Planning App"
-                  required
-                />
-              </div>
-              
-              <div className="mb-6">
-                <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
-                  Idea Description
-                </label>
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="block w-full p-3 bg-gray-800/70 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-primary-500 focus:border-primary-500 min-h-[200px]"
-                  placeholder="Describe your business idea in detail. What problem does it solve? Who is your target audience? How will it work?"
-                  required
-                />
-                
-                <div className="mt-2">
-                  <p className="text-sm text-gray-400 mb-2">Need inspiration? Try one of these:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {sampleIdeas.map((idea, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => handleUseSampleIdea(idea)}
-                        className="text-xs text-primary-400 bg-primary-900/30 border border-primary-800/50 rounded-full px-3 py-1.5 hover:bg-primary-900/50 transition-colors"
-                      >
-                        <span className="line-clamp-1">{idea.substring(0, 30)}...</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mb-8">
-                <div className="flex items-center">
-                  <input
-                    id="isPublic"
-                    type="checkbox"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-600 rounded bg-gray-700"
-                  />
-                  <label htmlFor="isPublic" className="ml-2 text-sm text-gray-300">
-                    Share this idea publicly in the gallery
-                  </label>
-                </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Public ideas can be viewed by anyone using the platform. Private ideas are only visible to you.
-                </p>
-              </div>
-              
-              <div className="flex justify-center">
+            {/* Action buttons */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex gap-3">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary px-8 py-3 rounded-lg flex items-center gap-2 text-lg font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isSubmitting || !description.trim()}
+                  className="bg-dark-800 hover:bg-dark-700 disabled:bg-dark-850 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                      <span>Analyzing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lightbulb size={20} />
-                      <span>Validate My Idea</span>
-                      <Send size={16} />
-                    </>
-                  )}
+                  {isSubmitting ? 'Processing...' : 'Continue'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDescription('');
+                    setTitle('');
+                  }}
+                  className="bg-transparent hover:bg-dark-800 text-white border border-dark-700 px-6 py-3 rounded-lg transition-all duration-200"
+                >
+                  Cancel
                 </button>
               </div>
               
-              <div className="mt-6 text-center text-sm text-gray-500">
-                By submitting, you agree to our <a href="/terms" className="text-primary-400 hover:underline">Terms of Service</a> and <a href="/privacy" className="text-primary-400 hover:underline">Privacy Policy</a>.
+              <button
+                type="button"
+                className="text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-2"
+              >
+                <Send size={18} />
+              </button>
+            </div>
+            
+            {/* Sample ideas section */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles size={20} className="text-dark-400" />
+                <p className="text-sm text-dark-400">Need inspiration? Try one of these:</p>
               </div>
-            </form>
-          </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sampleIdeas.map((idea, index) => (
+                  <motion.button
+                    key={index}
+                    type="button"
+                    onClick={() => handleUseSampleIdea(idea)}
+                    className="text-left p-4 bg-dark-900/30 border border-dark-800 rounded-xl hover:bg-dark-900/50 hover:border-dark-700 transition-all duration-200 group"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="flex items-start gap-2">
+                      <Lightbulb size={18} className="text-dark-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="text-sm font-medium text-white mb-1 group-hover:text-primary-400 transition-colors">
+                          {idea.title}
+                        </h3>
+                        <p className="text-xs text-dark-400 line-clamp-2">
+                          {idea.description}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </form>
         </motion.div>
       </main>
 

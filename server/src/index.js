@@ -15,6 +15,7 @@ import authRoutesV2 from './routes/authRoutes.js';
 import metricsRoutes from './routes/metrics.js';
 import ideaRefinerRoutes from './routes/ideaRefinerRoutes.js';
 import evidenceExtractorRoutes from './routes/evidenceExtractorRoutes.js';
+import researchRoutes from './routes/researchRoutes.js';
 
 // Load environment variables first - with explicit path
 import path from 'path';
@@ -25,7 +26,8 @@ console.log('Environment variables loaded from:', path.resolve(__dirname, '../.e
 
 // Check for required environment variables
 const requiredVars = [
-  'CEREBRAS_API_KEY', 
+  'CEREBRAS_API_KEY',
+  'PERPLEXITY_API_KEY',
   'APPWRITE_API_KEY',
   'APPWRITE_PROJECT_ID',
   'APPWRITE_ENDPOINT',
@@ -98,6 +100,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutesV2);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/refiner', ideaRefinerRoutes);
+app.use('/api/research', researchRoutes);
 app.use('/api/evidence', evidenceExtractorRoutes);
 
 // Error handling middleware

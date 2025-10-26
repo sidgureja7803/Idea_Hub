@@ -4,8 +4,8 @@ import { Client, Account, Databases, ID, Query, Storage } from 'appwrite';
 const client = new Client();
 
 client
-  .setEndpoint('https://cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
-  .setProject('foundriQ'); // Replace with your project ID
+  .setEndpoint('https://cloud.appwrite.io/v1') 
+  .setProject('testProject') // Using a generic project ID for now
 
 // Export initialized instances
 export const account = new Account(client);
@@ -19,7 +19,7 @@ export const COLLECTIONS = {
 };
 
 // Database ID
-export const DATABASE_ID = 'foundriQ';
+export const DATABASE_ID = 'testDatabase';
 
 // User authentication
 export const appwriteAuth = {

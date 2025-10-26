@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PlayCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const FirstPage: React.FC = () => {
   return (
@@ -30,6 +31,27 @@ const FirstPage: React.FC = () => {
         >
           Document well researched ideas with AI
         </motion.p>
+        
+        {/* Login/Signup buttons */}
+        <motion.div
+          className="flex justify-center gap-4 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+        >
+          <Link 
+            to="/sign-in" 
+            className="px-8 py-3 bg-transparent hover:bg-white/10 border border-white/30 rounded-lg text-white font-medium transition-all"
+          >
+            Log In
+          </Link>
+          <Link 
+            to="/sign-up" 
+            className="px-8 py-3 bg-primary-600 hover:bg-primary-700 rounded-lg text-white font-medium transition-all"
+          >
+            Sign Up
+          </Link>
+        </motion.div>
         
         <motion.div
           className="flex justify-center items-center mb-16"
